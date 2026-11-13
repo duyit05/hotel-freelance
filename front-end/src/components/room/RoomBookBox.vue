@@ -18,7 +18,7 @@ const today = todayISO()
 const valid = booking.checkout.value > booking.checkin.value && booking.checkin.value >= today
 const checkin = ref(valid ? booking.checkin.value : today)
 const checkout = ref(valid ? booking.checkout.value : addDays(today, 1))
-const guests = ref(Math.min(2, props.room.max))
+const guests = ref(Math.min(2, props.room.maxGuests))
 
 const minCheckout = computed(() => addDays(checkin.value, 1))
 watch(checkin, () => {
@@ -56,7 +56,7 @@ const field = 'mt-3 rounded-lg border border-line px-3.5 py-2.5 focus-within:bor
     </FormField>
     <FormField id="dGuests" v-slot="{ inputClass }" label="Số khách" :class="field">
       <select id="dGuests" v-model="guests" :class="inputClass">
-        <option v-for="n in room.max" :key="n" :value="n">{{ n }} người lớn</option>
+        <option v-for="n in room.maxGuests" :key="n" :value="n">{{ n }} người lớn</option>
       </select>
     </FormField>
 

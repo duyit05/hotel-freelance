@@ -117,3 +117,12 @@ export const FAQS = [
   { q: 'Hủy phòng như thế nào?', a: 'Hủy miễn phí trước 3 ngày so với ngày nhận phòng. Hủy muộn hơn tính phí một đêm đầu tiên.' },
   { q: 'Có xuất hóa đơn công ty không?', a: 'Có. Bạn gửi thông tin công ty cho lễ tân khi nhận phòng, hóa đơn sẽ gửi qua email trong 3 ngày.' },
 ]
+
+/* ----- Chính sách chung (trang chi tiết phòng) ----- */
+export const POLICIES = [
+  { label: 'Nhận phòng', value: 'Từ 14:00' },
+  { label: 'Trả phòng', value: 'Trước 12:00' },
+  { label: 'Hủy phòng', value: 'Miễn phí trước 3 ngày so với ngày nhận phòng' },
+  { label: 'Trẻ em', value: 'Dưới 6 tuổi ở miễn phí khi dùng giường có sẵn' },
+  { label: 'Hút thuốc', value: 'Không hút thuốc trong phòng' },
+]

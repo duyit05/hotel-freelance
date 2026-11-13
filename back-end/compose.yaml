@@ -1,0 +1,18 @@
+# Chạy PostgreSQL cho back-end:  docker compose up -d
+services:
+  postgres:
+    image: postgres:17
+    container_name: hotel-postgres
+    environment:
+      POSTGRES_DB: hotel
+      POSTGRES_USER: hotel
+      POSTGRES_PASSWORD: hotel
+    ports:
+      # Máy đã có PostgreSQL cài sẵn chiếm cổng 5432 nên container dùng cổng 5433
+      - "5433:5432"
+    volumes:
+      - hotel-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  hotel-pgdata:

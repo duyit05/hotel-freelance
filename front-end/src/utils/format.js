@@ -1,4 +1,8 @@
-export const money = (n) => n.toLocaleString('vi-VN') + 'đ'
+export const money = (n) => (n ?? 0).toLocaleString('vi-VN') + 'đ'
+
+/** "28 m², 2 khách, hướng phố" (bỏ qua các ô admin để trống) */
+export const roomMeta = (room, withView = true) =>
+  [room.size, room.guests, withView && room.view?.toLowerCase()].filter(Boolean).join(', ')
 
 const DAY = 864e5
 

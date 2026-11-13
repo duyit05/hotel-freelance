@@ -8,6 +8,13 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss()],
+  // Chuyển tiếp API và ảnh upload sang back-end Spring Boot khi chạy `npm run dev`
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8080',
+      '/uploads': 'http://localhost:8080',
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

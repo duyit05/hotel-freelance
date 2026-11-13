@@ -17,7 +17,7 @@ const specs = computed(() => [
   <div class="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line md:grid-cols-4">
     <div v-for="s in specs" :key="s.label" class="bg-surface p-4">
       <span class="block text-[13px] text-muted">{{ s.label }}</span>
-      <b class="font-semibold">{{ s.value }}</b>
+      <b class="font-semibold">{{ s.value || '—' }}</b>
     </div>
   </div>
 </template>

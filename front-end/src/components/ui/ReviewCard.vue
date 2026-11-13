@@ -1,7 +1,7 @@
 <script setup>
 defineProps({
   quote: { type: String, required: true },
-  author: { type: String, required: true },
+  author: { type: String, default: '' },
   compact: { type: Boolean, default: false }, // dạng có viền, chữ nhỏ hơn (trang chi tiết phòng)
 })
 </script>
