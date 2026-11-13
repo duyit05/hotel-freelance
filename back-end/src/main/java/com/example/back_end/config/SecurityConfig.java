@@ -42,6 +42,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 public class SecurityConfig {
 
     public static final String ROLES_CLAIM = "roles";
+    public static final String NAME_CLAIM = "name";
 
     private final AppProperties props;
 

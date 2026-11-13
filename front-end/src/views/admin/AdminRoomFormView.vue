@@ -2,11 +2,13 @@
 // Dùng chung cho thêm phòng (không có id) và sửa phòng (có id)
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import AdminIcon from '@/components/admin/AdminIcon.vue'
+import AdminAlert from '@/components/admin/AdminAlert.vue'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import AdminField from '@/components/admin/AdminField.vue'
 import ListEditor from '@/components/admin/ListEditor.vue'
 import ImageListEditor from '@/components/admin/ImageListEditor.vue'
-import { CARD, INPUT } from '@/components/admin/styles'
+import { BTN_PRIMARY, BTN_SECONDARY, CARD, CARD_TITLE, INPUT } from '@/components/admin/styles'
 import { roomApi } from '@/api/rooms'
 import { useFlash } from '@/composables/useFlash'
 import { useRooms } from '@/composables/useRooms'
@@ -102,20 +104,28 @@ const listError = (key) =>
 
 <template>
   <div>
-    <RouterLink :to="{ name: 'admin-rooms' }" class="text-sm text-muted no-underline hover:text-primary">
-      ← Danh sách phòng
-    </RouterLink>
-    <h1 class="mt-2 mb-6 text-[30px]">{{ isEdit ? `Sửa: ${form.name || '...'}` : 'Thêm phòng mới' }}</h1>
+    <AdminPageHeader
+      :title="isEdit ? form.name || 'Sửa phòng' : 'Thêm phòng mới'"
+      :subtitle="isEdit ? 'Chỉnh sửa thông tin hiển thị trên trang phòng.' : 'Điền thông tin để thêm loại phòng mới lên website.'"
+      :back="{ name: 'admin-rooms' }"
+      back-label="Danh sách phòng"
+    />
 
-    <p v-if="loading" class="text-muted">Đang tải...</p>
+    <div v-if="loading" class="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div class="space-y-6">
+        <div class="h-80 animate-pulse rounded-2xl bg-soft" />
+        <div class="h-48 animate-pulse rounded-2xl bg-soft" />
+      </div>
+      <div class="h-64 animate-pulse rounded-2xl bg-soft" />
+    </div>
 
     <form v-else class="grid items-start gap-6 lg:grid-cols-[1fr_300px]" novalidate @submit.prevent="save">
       <div class="space-y-6">
-        <p v-if="error" class="rounded-lg bg-red-50 px-4 py-3 text-red-700" role="alert">{{ error }}</p>
+        <AdminAlert v-if="error" type="error">{{ error }}</AdminAlert>
 
         <!-- Thông tin chính -->
         <section :class="CARD">
-          <h2 class="mb-4 font-sans text-lg">Thông tin chính</h2>
+          <h2 :class="[CARD_TITLE, 'mb-5']">Thông tin chính</h2>
           <div class="grid gap-4 sm:grid-cols-2">
             <AdminField id="name" label="Tên phòng" required :error="errors.name" class="sm:col-span-2">
               <input id="name" v-model="form.name" :class="INPUT" :aria-invalid="!!errors.name" maxlength="150" />
@@ -182,7 +192,7 @@ const listError = (key) =>
 
         <!-- Mô tả -->
         <section :class="CARD">
-          <h2 class="mb-4 font-sans text-lg">Mô tả</h2>
+          <h2 :class="[CARD_TITLE, 'mb-5']">Mô tả</h2>
           <div class="space-y-4">
             <AdminField
               id="shortDescription"
@@ -200,13 +210,13 @@ const listError = (key) =>
 
         <!-- Ảnh -->
         <section :class="CARD">
-          <h2 class="mb-4 font-sans text-lg">Hình ảnh</h2>
+          <h2 :class="[CARD_TITLE, 'mb-5']">Hình ảnh</h2>
           <ImageListEditor v-model="form.images" />
         </section>
 
         <!-- Danh sách -->
         <section :class="CARD">
-          <h2 class="mb-1 font-sans text-lg">Điểm nổi bật</h2>
+          <h2 :class="[CARD_TITLE, 'mb-1']">Điểm nổi bật</h2>
           <p class="mb-4 text-sm text-muted">Nên có 3 mục, hiện ngay dưới phần giới thiệu.</p>
           <ListEditor
             v-model="form.highlights"
@@ -220,12 +230,12 @@ const listError = (key) =>
         </section>
 
         <section :class="CARD">
-          <h2 class="mb-4 font-sans text-lg">Tiện nghi trong phòng</h2>
+          <h2 :class="[CARD_TITLE, 'mb-5']">Tiện nghi trong phòng</h2>
           <ListEditor v-model="form.features" add-label="Thêm tiện nghi" placeholder="vd. Máy pha cà phê" />
         </section>
 
         <section :class="CARD">
-          <h2 class="mb-4 font-sans text-lg">Đánh giá của khách</h2>
+          <h2 :class="[CARD_TITLE, 'mb-5']">Đánh giá của khách</h2>
           <ListEditor
             v-model="form.reviews"
             :fields="[
@@ -239,20 +249,39 @@ const listError = (key) =>
       </div>
 
       <!-- Cột lưu -->
-      <aside :class="[CARD, 'space-y-3 lg:sticky lg:top-24']">
-        <BaseButton type="submit" class="w-full" :disabled="saving">
-          {{ saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Thêm phòng' }}
-        </BaseButton>
-        <BaseButton :to="{ name: 'admin-rooms' }" variant="ghost" class="w-full">Hủy</BaseButton>
-        <a
-          v-if="isEdit"
-          :href="`/phong/${form.slug}`"
-          target="_blank"
-          rel="noopener"
-          class="block text-center text-sm text-muted hover:text-primary"
-        >
-          Xem trang phòng ↗
-        </a>
+      <aside :class="[CARD, 'overflow-hidden p-0 lg:sticky lg:top-24']">
+        <!-- Xem trước thẻ phòng -->
+        <div class="aspect-16/10 bg-soft">
+          <img v-if="form.images[0]" :src="form.images[0]" alt="" class="size-full object-cover" />
+          <div v-else class="flex size-full flex-col items-center justify-center gap-1 text-sm text-muted">
+            <AdminIcon name="image" class="size-8 text-muted/50" />
+            Chưa có ảnh bìa
+          </div>
+        </div>
+        <div class="p-5">
+          <p class="truncate font-serif text-lg">{{ form.name || 'Tên phòng' }}</p>
+          <p class="text-sm text-muted">
+            <span class="font-semibold text-ink">{{ form.price ? money(Number(form.price)) : '—' }}</span> / đêm ·
+            tối đa {{ form.maxGuests || '?' }} khách
+          </p>
+
+          <div class="mt-5 space-y-2">
+            <button type="submit" :class="[BTN_PRIMARY, 'w-full']" :disabled="saving">
+              <AdminIcon name="save" class="size-[18px]" />
+              {{ saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Thêm phòng' }}
+            </button>
+            <RouterLink :to="{ name: 'admin-rooms' }" :class="[BTN_SECONDARY, 'w-full']">Hủy</RouterLink>
+          </div>
+          <a
+            v-if="isEdit"
+            :href="`/phong/${form.slug}`"
+            target="_blank"
+            rel="noopener"
+            class="mt-4 flex items-center justify-center gap-1.5 text-sm text-muted no-underline hover:text-primary"
+          >
+            <AdminIcon name="eye" class="size-4" /> Xem trang phòng
+          </a>
+        </div>
       </aside>
     </form>
   </div>

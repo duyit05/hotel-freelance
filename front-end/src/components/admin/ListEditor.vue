@@ -2,7 +2,8 @@
 // Sửa một danh sách: thêm, xóa, đổi thứ tự.
 // - Không truyền `fields`: mỗi mục là một chuỗi (vd. tiện nghi).
 // - Có `fields`: mỗi mục là object, vd. [{ key: 'title', label: 'Tiêu đề' }, { key: 'text', label: 'Mô tả', multiline: true }]
-import { INPUT, BTN_SMALL } from './styles'
+import AdminIcon from './AdminIcon.vue'
+import { INPUT, BTN_ICON, BTN_ICON_DANGER, BTN_SMALL } from './styles'
 
 const items = defineModel({ type: Array, required: true })
 const props = defineProps({
@@ -28,10 +29,10 @@ function move(i, step) {
 <template>
   <div class="space-y-2.5">
     <div v-for="(item, i) in items" :key="i" class="flex items-start gap-2">
-      <span class="w-6 shrink-0 pt-2 text-right text-sm text-muted">{{ i + 1 }}.</span>
+      <span class="mt-2 flex size-6 shrink-0 items-center justify-center rounded-full bg-soft text-xs font-medium text-muted">{{ i + 1 }}</span>
 
       <input v-if="!fields" v-model="items[i]" :class="INPUT" :placeholder="placeholder" />
-      <div v-else class="grid flex-1 gap-2 rounded-lg border border-line bg-bg p-3">
+      <div v-else class="grid flex-1 gap-2 rounded-xl border border-line/70 bg-bg/60 p-3">
         <template v-for="f in fields" :key="f.key">
           <textarea
             v-if="f.multiline"
@@ -45,13 +46,13 @@ function move(i, step) {
         </template>
       </div>
 
-      <div class="flex shrink-0 gap-1">
-        <button type="button" :class="BTN_SMALL" :disabled="i === 0" aria-label="Đưa lên" @click="move(i, -1)">↑</button>
-        <button type="button" :class="BTN_SMALL" :disabled="i === items.length - 1" aria-label="Đưa xuống" @click="move(i, 1)">↓</button>
-        <button type="button" :class="[BTN_SMALL, 'hover:border-red-500! hover:text-red-600!']" aria-label="Xóa" @click="remove(i)">✕</button>
+      <div class="flex shrink-0 gap-0.5 pt-0.5">
+        <button type="button" :class="BTN_ICON" :disabled="i === 0" title="Đưa lên" aria-label="Đưa lên" @click="move(i, -1)"><AdminIcon name="chevronUp" class="size-[18px]" /></button>
+        <button type="button" :class="BTN_ICON" :disabled="i === items.length - 1" title="Đưa xuống" aria-label="Đưa xuống" @click="move(i, 1)"><AdminIcon name="chevronDown" class="size-[18px]" /></button>
+        <button type="button" :class="BTN_ICON_DANGER" title="Xóa" aria-label="Xóa" @click="remove(i)"><AdminIcon name="trash" class="size-[18px]" /></button>
       </div>
     </div>
 
-    <button type="button" :class="BTN_SMALL" @click="add">+ {{ addLabel }}</button>
+    <button type="button" :class="[BTN_SMALL, 'border-dashed px-3 py-2']" @click="add"><AdminIcon name="plus" class="size-4" /> {{ addLabel }}</button>
   </div>
 </template>

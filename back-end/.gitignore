@@ -34,3 +34,6 @@ build/
 
 ### Ảnh admin upload
 uploads/
+
+### Biến môi trường
+.env

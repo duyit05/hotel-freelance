@@ -4,6 +4,19 @@ export const money = (n) => (n ?? 0).toLocaleString('vi-VN') + 'đ'
 export const roomMeta = (room, withView = true) =>
   [room.size, room.guests, withView && room.view?.toLowerCase()].filter(Boolean).join(', ')
 
+/** "Nguyễn Văn An" -> "VA" (dùng cho ảnh đại diện chữ) */
+export const initials = (name) =>
+  (name || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+
+/** Ngày dạng 13/11/2026 */
+export const shortDate = (iso) => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '—')
+
 const DAY = 864e5
 
 export const toISO = (d) => d.toISOString().slice(0, 10)

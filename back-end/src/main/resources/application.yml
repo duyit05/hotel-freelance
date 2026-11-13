@@ -1,0 +1,49 @@
+
+spring:
+  application:
+    name: back-end
+
+  # Đọc biến môi trường từ file .env (nếu có) trong thư mục back-end
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/hotel}
+    username: ${DB_USERNAME:hotel}
+    password: ${DB_PASSWORD:hotel}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
+server:
+  port: 8080
+
+# Upload ảnh
+app:
+  upload-dir: ${UPLOAD_DIR:uploads}
+
+  # JWT
+  # Khi chạy thật PHẢI đặt biến môi trường JWT_SECRET
+  # Chuỗi ngẫu nhiên, ít nhất 32 ký tự
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-hay-doi-khi-chay-that-0123456789}
+    expiration: 8h
+
+  # Tài khoản admin được tạo lần đầu chạy (nếu chưa có)
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:admin123}
+    full-name: ${ADMIN_FULL_NAME:Quản trị viên}
+
+  # Front-end được phép gọi API (khi không dùng proxy của Vite)
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173}

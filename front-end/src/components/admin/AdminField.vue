@@ -11,11 +11,11 @@ defineProps({
 
 <template>
   <div>
-    <label :for="id" class="mb-1.5 block text-sm font-medium">
-      {{ label }}<span v-if="required" class="text-red-600"> *</span>
+    <label :for="id" class="mb-1.5 block text-sm font-medium text-ink/90">
+      {{ label }}<span v-if="required" class="text-red-500"> *</span>
     </label>
     <slot />
-    <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
-    <p v-else-if="hint" class="mt-1 text-sm text-muted">{{ hint }}</p>
+    <p v-if="error" class="mt-1.5 text-[13px] text-red-600">{{ error }}</p>
+    <p v-else-if="hint" class="mt-1.5 text-[13px] text-muted">{{ hint }}</p>
   </div>
 </template>

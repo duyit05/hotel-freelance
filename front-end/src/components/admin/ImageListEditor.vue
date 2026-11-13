@@ -2,6 +2,7 @@
 // Quản lý ảnh phòng: upload nhiều ảnh, xóa, chọn ảnh bìa (ảnh đầu tiên)
 import { ref } from 'vue'
 import { uploadImage } from '@/api/rooms'
+import AdminIcon from './AdminIcon.vue'
 import { BTN_SMALL } from './styles'
 
 const images = defineModel({ type: Array, required: true })
@@ -41,13 +42,13 @@ function makeCover(i) {
       <figure
         v-for="(src, i) in images"
         :key="src + i"
-        class="group relative aspect-4/3 overflow-hidden rounded-lg border border-line bg-img"
+        class="group relative aspect-4/3 overflow-hidden rounded-xl border border-line/70 bg-img"
       >
         <img :src="src" alt="" class="size-full object-cover" />
-        <span v-if="i === 0" class="absolute top-2 left-2 rounded-full bg-primary px-2 py-0.5 text-xs text-white">
+        <span v-if="i === 0" class="absolute top-2 left-2 rounded-full bg-primary/90 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur">
           Ảnh bìa
         </span>
-        <div class="absolute inset-x-2 bottom-2 flex justify-end gap-1">
+        <div class="absolute inset-x-2 bottom-2 flex justify-end gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
           <button v-if="i > 0" type="button" :class="BTN_SMALL" @click="makeCover(i)">Đặt làm bìa</button>
           <button type="button" :class="[BTN_SMALL, 'hover:border-red-500! hover:text-red-600!']" @click="remove(i)">
             Xóa
@@ -57,11 +58,11 @@ function makeCover(i) {
 
       <button
         type="button"
-        class="flex aspect-4/3 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-line text-sm text-muted hover:border-primary hover:text-primary disabled:opacity-60"
+        class="flex aspect-4/3 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-line bg-bg/50 text-sm text-muted transition-colors hover:border-primary/50 hover:bg-soft/40 hover:text-primary disabled:opacity-60"
         :disabled="uploading > 0"
         @click="input.click()"
       >
-        <span class="text-2xl leading-none">+</span>
+        <AdminIcon name="upload" class="size-6" />
         {{ uploading ? `Đang tải lên ${uploading} ảnh...` : 'Thêm ảnh' }}
       </button>
     </div>

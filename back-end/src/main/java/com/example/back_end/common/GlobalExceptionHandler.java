@@ -28,6 +28,13 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(FieldValidationException.class)
+    public ProblemDetail handleFieldValidation(FieldValidationException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        pd.setProperty("errors", ex.getErrors());
+        return pd;
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ProblemDetail handleBadLogin(AuthenticationException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Sai tên đăng nhập hoặc mật khẩu");

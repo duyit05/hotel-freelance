@@ -25,7 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Chạy một lần khi khởi động:
- * - Tạo tài khoản admin nếu chưa có (lấy từ app.admin.*).
+ * - Tạo tài khoản admin nếu chưa có (lấy từ app.admin.*), điền họ tên cho tài khoản cũ chưa có.
  * - Nếu bảng phòng đang trống: chép ảnh mẫu vào thư mục upload và thêm 6 phòng mẫu từ seed/rooms.json.
  */
 @Slf4j
@@ -49,11 +49,17 @@ public class DataInitializer implements ApplicationRunner {
 
     private void seedAdmin() {
         String username = props.admin().username();
-        if (users.existsByUsername(username)) {
-            return;
+        String fullName = props.admin().fullName();
+        if (!users.existsByUsername(username)) {
+            users.save(new User(username, fullName, passwordEncoder.encode(props.admin().password()), Role.ADMIN));
+            log.info("Đã tạo tài khoản admin '{}'", username);
         }
-        users.save(new User(username, passwordEncoder.encode(props.admin().password()), Role.ADMIN));
-        log.info("Đã tạo tài khoản admin '{}'", username);
+        // Tài khoản tạo trước khi có cột full_name: điền tạm để không bị trống
+        for (User user : users.findByFullNameIsNull()) {
+            user.setFullName(user.getUsername().equals(username) ? fullName : user.getUsername());
+            users.save(user);
+            log.info("Đã điền họ tên cho tài khoản '{}'", user.getUsername());
+        }
     }
 
     private void seedRooms() throws Exception {

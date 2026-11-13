@@ -24,14 +24,50 @@ const router = createRouter({
       component: () => import('@/layouts/AdminLayout.vue'),
       meta: { admin: true, requiresAdmin: true },
       children: [
-        { path: '', redirect: { name: 'admin-rooms' } },
-        { path: 'phong', name: 'admin-rooms', component: () => import('@/views/admin/AdminRoomsView.vue') },
-        { path: 'phong/moi', name: 'admin-room-new', component: () => import('@/views/admin/AdminRoomFormView.vue') },
+        // meta.title: hiện trên thanh trên cùng; meta.section: mục sáng trên sidebar
+        {
+          path: '',
+          name: 'admin-dashboard',
+          component: () => import('@/views/admin/AdminDashboardView.vue'),
+          meta: { title: 'Tổng quan' },
+        },
+        {
+          path: 'phong',
+          name: 'admin-rooms',
+          component: () => import('@/views/admin/AdminRoomsView.vue'),
+          meta: { title: 'Phòng', section: 'rooms' },
+        },
+        {
+          path: 'phong/moi',
+          name: 'admin-room-new',
+          component: () => import('@/views/admin/AdminRoomFormView.vue'),
+          meta: { title: 'Thêm phòng', section: 'rooms' },
+        },
         {
           path: 'phong/:id',
           name: 'admin-room-edit',
           component: () => import('@/views/admin/AdminRoomFormView.vue'),
           props: true,
+          meta: { title: 'Sửa phòng', section: 'rooms' },
+        },
+        {
+          path: 'tai-khoan',
+          name: 'admin-users',
+          component: () => import('@/views/admin/AdminUsersView.vue'),
+          meta: { title: 'Tài khoản', section: 'users' },
+        },
+        {
+          path: 'tai-khoan/moi',
+          name: 'admin-user-new',
+          component: () => import('@/views/admin/AdminUserFormView.vue'),
+          meta: { title: 'Thêm tài khoản', section: 'users' },
+        },
+        {
+          path: 'tai-khoan/:id',
+          name: 'admin-user-edit',
+          component: () => import('@/views/admin/AdminUserFormView.vue'),
+          props: true,
+          meta: { title: 'Sửa tài khoản', section: 'users' },
         },
       ],
     },
@@ -54,7 +90,7 @@ router.beforeEach((to) => {
     return { name: 'admin-login', query: { redirect: to.fullPath } }
   }
   if (to.meta.guestOnly && isAdmin()) {
-    return { name: 'admin-rooms' }
+    return { name: 'admin-dashboard' }
   }
 })
 

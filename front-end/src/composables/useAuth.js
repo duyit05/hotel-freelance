@@ -40,7 +40,13 @@ export function setUnauthorizedHandler(fn) {
 
 export function useAuth() {
   const user = computed(() =>
-    payload.value ? { username: payload.value.sub, roles: payload.value.roles ?? [] } : null,
+    payload.value
+      ? {
+          username: payload.value.sub,
+          fullName: payload.value.name ?? payload.value.sub,
+          roles: payload.value.roles ?? [],
+        }
+      : null,
   )
   const isAdmin = () => !isExpired() && (payload.value?.roles ?? []).includes('ADMIN')
 

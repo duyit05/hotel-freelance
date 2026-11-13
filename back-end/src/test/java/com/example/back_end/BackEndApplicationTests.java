@@ -96,4 +96,64 @@ class BackEndApplicationTests {
 		mvc.perform(delete("/api/rooms/" + id).header("Authorization", auth)).andExpect(status().isNoContent());
 		assertThat(mvc.perform(get("/api/rooms/" + id)).andReturn().getResponse().getStatus()).isEqualTo(404);
 	}
+
+	private String login(String username, String password) throws Exception {
+		String body = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}"))
+			.andExpect(status().isOk())
+			.andReturn().getResponse().getContentAsString();
+		return "Bearer " + JsonPath.read(body, "$.token");
+	}
+
+	@Test
+	void adminCanManageUsers() throws Exception {
+		String auth = login("admin", "admin123");
+
+		mvc.perform(get("/api/auth/me").header("Authorization", auth))
+			.andExpect(jsonPath("$.fullName").value("Quản trị viên"));
+		mvc.perform(get("/api/users")).andExpect(status().isUnauthorized());
+
+		// Thiếu họ tên và mật khẩu -> 400 theo từng trường
+		mvc.perform(post("/api/users").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"letan\",\"fullName\":\" \"}"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errors.fullName").exists());
+		mvc.perform(post("/api/users").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"letan\",\"fullName\":\"Lễ Tân\"}"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errors.password").exists());
+
+		String created = mvc.perform(post("/api/users").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"letan\",\"fullName\":\"Nguyễn Lễ Tân\",\"password\":\"matkhau1\"}"))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.fullName").value("Nguyễn Lễ Tân"))
+			.andExpect(jsonPath("$.password").doesNotExist())
+			.andReturn().getResponse().getContentAsString();
+		Integer id = JsonPath.read(created, "$.id");
+
+		// Trùng tên đăng nhập
+		mvc.perform(post("/api/users").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"letan\",\"fullName\":\"X\",\"password\":\"matkhau1\"}"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errors.username").exists());
+
+		// Đổi họ tên + mật khẩu, rồi đăng nhập bằng mật khẩu mới: token có họ tên mới
+		mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/users/" + id)
+				.header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"fullName\":\"Trần Lễ Tân\",\"password\":\"matkhau2\"}"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.username").value("letan"))
+			.andExpect(jsonPath("$.fullName").value("Trần Lễ Tân"));
+		String other = login("letan", "matkhau2");
+
+		// Không tự xóa tài khoản đang đăng nhập
+		mvc.perform(delete("/api/users/" + id).header("Authorization", other))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.detail").value("Không thể tự xóa tài khoản đang đăng nhập"));
+
+		mvc.perform(delete("/api/users/" + id).header("Authorization", auth)).andExpect(status().isNoContent());
+		mvc.perform(get("/api/users/" + id).header("Authorization", auth)).andExpect(status().isNotFound());
+	}
 }

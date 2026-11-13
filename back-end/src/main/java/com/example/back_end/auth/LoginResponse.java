@@ -3,5 +3,5 @@ package com.example.back_end.auth;
 import java.time.Instant;
 import java.util.List;
 
-public record LoginResponse(String token, String username, List<String> roles, Instant expiresAt) {
+public record LoginResponse(String token, String username, String fullName, List<String> roles, Instant expiresAt) {
 }

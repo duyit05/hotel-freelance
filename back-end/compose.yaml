@@ -5,8 +5,8 @@ services:
     container_name: hotel-postgres
     environment:
       POSTGRES_DB: hotel
-      POSTGRES_USER: hotel
-      POSTGRES_PASSWORD: hotel
+      POSTGRES_USER: ${DB_USERNAME:-hotel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hotel}
     ports:
       # Máy đã có PostgreSQL cài sẵn chiếm cổng 5432 nên container dùng cổng 5433
       - "5433:5432"

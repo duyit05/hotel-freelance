@@ -24,8 +24,9 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final AppProperties props;
 
-    /** Tạo token chứa tên đăng nhập (sub), role (roles) và thời hạn (exp) */
-    public LoginResponse issue(Authentication auth) {
+    /** Tạo token chứa tên đăng nhập (sub), họ tên (name), role (roles) và thời hạn (exp) */
+    public LoginResponse issue(Authentication auth, String fullName) {
+        String name = fullName == null || fullName.isBlank() ? auth.getName() : fullName;
         Instant now = Instant.now();
         Instant expiresAt = now.plus(props.jwt().expiration());
         List<String> roles = auth.getAuthorities().stream()
@@ -40,9 +41,10 @@ public class JwtService {
             .expiresAt(expiresAt)
             .subject(auth.getName())
             .claim(SecurityConfig.ROLES_CLAIM, roles)
+            .claim(SecurityConfig.NAME_CLAIM, name)
             .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
-        return new LoginResponse(token, auth.getName(), roles, expiresAt);
+        return new LoginResponse(token, auth.getName(), name, roles, expiresAt);
     }
 }
