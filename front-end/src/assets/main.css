@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* Màu, font, bo góc... dùng chung cho toàn site (sinh ra các class bg-primary, text-muted, rounded-card, ...) */
+@theme {
+  --color-bg: #FAF7F0;
+  --color-surface: #FFFDF9;
+  --color-soft: #F2EDE2;
+  --color-ink: #2B2824;
+  --color-muted: #756F66;
+  --color-primary: #5B4636;
+  --color-primary-hover: #4A3829;
+  --color-accent: #B89A6A;
+  --color-line: #E7E0D2;
+  --color-img: #EEE8DC;
+
+  --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-serif: "Lora", Georgia, serif;
+
+  --radius-card: 10px;
+  --ease-soft: cubic-bezier(.2, .7, .2, 1);
+
+  /* Breakpoint theo thiết kế gốc: sm = 560px, md = 920px */
+  --breakpoint-sm: 35rem;
+  --breakpoint-md: 57.5rem;
+
+  --animate-rise: rise .9s var(--ease-soft) both;
+  --animate-view-in: view-in .6s var(--ease-soft);
+  --animate-view-in-fast: view-in .4s var(--ease-soft);
+  --animate-slow-zoom: slow-zoom 9s ease-out forwards;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes view-in {
+    from { opacity: 0; transform: translateY(16px); }
+  }
+  @keyframes slow-zoom {
+    from { transform: scale(1.12); }
+    to { transform: scale(1); }
+  }
+}
+
+/* Khung nội dung căn giữa */
+@utility wrap {
+  max-width: 1160px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+@layer base {
+  body {
+    @apply bg-bg font-sans text-base/[1.6] text-ink;
+  }
+  h1, h2, h3 {
+    @apply font-serif leading-[1.2] font-semibold;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-3 outline-accent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
