@@ -1,4 +1,4 @@
-# Chạy PostgreSQL cho back-end:  docker compose up -d
+# Chạy PostgreSQL và MinIO cho back-end:  docker compose up -d
 services:
   postgres:
     image: postgres:17
@@ -14,5 +14,21 @@ services:
       - hotel-pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # Lưu ảnh. Trang quản trị MinIO: http://localhost:9001
+  minio:
+    image: minio/minio:latest
+    container_name: hotel-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - hotel-minio:/data
+    restart: unless-stopped
+
 volumes:
   hotel-pgdata:
+  hotel-minio:

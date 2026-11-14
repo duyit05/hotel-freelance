@@ -3,21 +3,25 @@ package com.example.back_end.upload;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.example.back_end.config.AppProperties;
+import lombok.RequiredArgsConstructor;
 
-/** Lưu ảnh vào thư mục app.upload-dir, trả về đường dẫn dạng /uploads/<tên-file> */
+/**
+ * Kiểm tra và đặt tên ảnh, lưu qua StorageBackend (MinIO hoặc local).
+ * Đường dẫn trả về luôn có dạng /uploads/<tên-file>, ảnh được phục vụ bởi ImageController.
+ */
 @Service
+@RequiredArgsConstructor
 public class FileStorageService {
 
     private static final Map<String, String> ALLOWED = Map.of(
@@ -25,29 +29,24 @@ public class FileStorageService {
         "image/png", "png",
         "image/webp", "webp");
 
-    private final Path root;
+    /** Chỉ chữ, số, dấu chấm, gạch dưới, gạch ngang; không có "/" hay ".." */
+    private static final Pattern VALID_NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]*(\\.[A-Za-z0-9]+)?");
 
-    public FileStorageService(AppProperties props) {
-        this.root = Path.of(props.uploadDir()).toAbsolutePath().normalize();
-        try {
-            Files.createDirectories(root);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Không tạo được thư mục upload: " + root, e);
-        }
-    }
+    private final StorageBackend backend;
 
     public String store(MultipartFile file) {
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File rỗng");
         }
-        String ext = ALLOWED.get(file.getContentType());
+        String contentType = file.getContentType();
+        String ext = contentType == null ? null : ALLOWED.get(contentType);
         if (ext == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ nhận ảnh JPG, PNG hoặc WEBP");
         }
         // Tự đặt tên file mới, không dùng tên gốc từ máy người dùng
         String name = UUID.randomUUID() + "." + ext;
         try (InputStream in = file.getInputStream()) {
-            Files.copy(in, root.resolve(name));
+            backend.put(name, in, file.getSize(), contentType);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -55,11 +54,32 @@ public class FileStorageService {
     }
 
     /** Dùng khi khởi tạo dữ liệu mẫu */
-    public void storeIfMissing(String name, InputStream in) throws IOException {
-        Path target = root.resolve(name).normalize();
-        if (!target.startsWith(root) || Files.exists(target)) {
+    public void storeIfMissing(String name, InputStream in) {
+        if (!isValidName(name) || backend.exists(name)) {
             return;
         }
-        Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+        backend.put(name, in, -1, contentTypeOf(name));
+    }
+
+    public Optional<StorageBackend.StoredFile> load(String name) {
+        return isValidName(name) ? backend.get(name) : Optional.empty();
+    }
+
+    static boolean isValidName(String name) {
+        return name != null && VALID_NAME.matcher(name).matches();
+    }
+
+    static String contentTypeOf(String name) {
+        String lower = name.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        return "application/octet-stream";
     }
 }

@@ -120,6 +120,30 @@ class BackEndApplicationTests {
 	}
 
 	@Test
+	void uploadedImageIsServed() throws Exception {
+		// Ảnh mẫu đã được chép vào nơi lưu ảnh khi khởi động
+		mvc.perform(get("/uploads/bath.jpg"))
+			.andExpect(status().isOk())
+			.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+				.contentType(MediaType.IMAGE_JPEG));
+		mvc.perform(get("/uploads/khong-co.jpg")).andExpect(status().isNotFound());
+		mvc.perform(get("/uploads/..%2Fapplication.yml")).andExpect(status().is4xxClientError());
+
+		byte[] png = { (byte) 0x89, 'P', 'N', 'G', 1, 2, 3 };
+		var file = new org.springframework.mock.web.MockMultipartFile("file", "a.png", "image/png", png);
+		var multipart = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/uploads").file(file);
+		mvc.perform(multipart).andExpect(status().isUnauthorized());
+
+		String body = mvc.perform(multipart.header("Authorization", login("admin", "admin123")))
+			.andExpect(status().isCreated())
+			.andReturn().getResponse().getContentAsString();
+		String url = JsonPath.read(body, "$.url");
+		assertThat(url).startsWith("/uploads/").endsWith(".png");
+		assertThat(mvc.perform(get(url)).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray())
+			.isEqualTo(png);
+	}
+
+	@Test
 	void adminCanManageUsers() throws Exception {
 		String auth = login("admin", "admin123");
 

@@ -31,7 +31,7 @@ import tools.jackson.databind.ObjectMapper;
  * Chạy một lần khi khởi động:
  * - Tạo tài khoản admin nếu chưa có (lấy từ app.admin.*), điền họ tên cho tài khoản cũ chưa có.
  * - Tạo loại phòng mặc định nếu chưa có, chuyển dữ liệu loại phòng cũ (nếu có).
- * - Nếu bảng phòng đang trống: chép ảnh mẫu vào thư mục upload và thêm 6 phòng mẫu từ seed/rooms.json.
+ * - Nếu bảng phòng đang trống: chép ảnh mẫu vào nơi lưu ảnh (MinIO hoặc thư mục local) và thêm 6 phòng mẫu từ seed/rooms.json.
  */
 @Slf4j
 @Component
