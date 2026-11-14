@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { request } from '@/api/http'
 
-const STORAGE_KEY = 'moclan_admin_token'
+const STORAGE_KEY = 'duynhat_admin_token'
 const token = ref(localStorage.getItem(STORAGE_KEY))
 let onUnauthorized = null
 
@@ -10,7 +10,9 @@ let onUnauthorized = null
 function decode(jwt) {
   try {
     const part = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    return JSON.parse(atob(part))
+    // atob trả về từng byte; giải mã lại UTF-8 để tên tiếng Việt không bị lỗi font
+    const bytes = Uint8Array.from(atob(part), (c) => c.charCodeAt(0))
+    return JSON.parse(new TextDecoder().decode(bytes))
   } catch {
     return null
   }

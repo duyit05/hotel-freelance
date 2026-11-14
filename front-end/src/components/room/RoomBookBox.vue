@@ -75,7 +75,7 @@ const field = 'mt-3 rounded-lg border border-line px-3.5 py-2.5 focus-within:bor
       <span>{{ money(total) }}</span>
     </div>
 
-    <BaseButton :href="`tel:${PHONE.tel}`" class="w-full">Gọi đặt phòng</BaseButton>
+    <BaseButton :href="`tel:${PHONE.tel}`" variant="ghost" class="w-full">Gọi đặt phòng</BaseButton>
     <BaseButton :href="ZALO_URL" variant="ghost" class="mt-2.5 w-full" target="_blank" rel="noopener">
       Nhắn Zalo
     </BaseButton>

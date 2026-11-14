@@ -12,7 +12,7 @@ const DELAYS = [0, 1, 2, 3, 1, 2]
 
 <template>
   <PageSection id="hinh-anh">
-    <SectionHeading title="Hình ảnh" lead="Một vòng quanh khách sạn và khu biển Mỹ Khê." />
+    <SectionHeading title="Hình ảnh" lead="Một vòng quanh khách sạn và bờ biển Quy Nhơn." />
     <div class="grid auto-rows-[180px] grid-cols-2 gap-3.5 md:auto-rows-[220px] md:grid-cols-4">
       <AppLink
         v-for="(item, i) in GALLERY"

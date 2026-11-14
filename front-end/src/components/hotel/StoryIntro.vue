@@ -11,11 +11,11 @@ import { STATS } from '@/data/hotel'
       <div v-reveal>
         <SectionTitle>Câu chuyện của chúng tôi</SectionTitle>
         <LeadText>
-          Mộc Lan bắt đầu từ một nhà nghỉ gia đình 12 phòng vào năm 2015. Sau gần mười năm, khách sạn có 48 phòng,
+          Duy Nhất bắt đầu từ một nhà nghỉ gia đình 12 phòng vào năm 2015. Sau gần mười năm, khách sạn có 48 phòng,
           hồ bơi tầng thượng và nhà hàng riêng, nhưng vẫn giữ cách đón khách như người nhà.
         </LeadText>
         <LeadText class="mt-3.5">
-          Đội ngũ 40 nhân viên đều là người Đà Nẵng. Họ có thể chỉ cho bạn quán bún chả cá ngon nhất phố hay giờ
+          Đội ngũ 40 nhân viên đều là người Quy Nhơn. Họ có thể chỉ cho bạn quán bánh xèo tôm nhảy, bún chả cá ngon nhất phố hay giờ
           đẹp nhất để ngắm bình minh trên biển.
         </LeadText>
       </div>

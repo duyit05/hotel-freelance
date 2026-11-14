@@ -8,6 +8,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,6 +38,11 @@ public class Room {
 
     @Column(nullable = false, length = 150)
     private String name;
+
+    /** Loại phòng. DB cho phép null để không lỗi với phòng tạo trước đây; API bắt buộc chọn. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_type_id")
+    private RoomType type;
 
     /** Giá một đêm (VNĐ) */
     @Column(nullable = false)

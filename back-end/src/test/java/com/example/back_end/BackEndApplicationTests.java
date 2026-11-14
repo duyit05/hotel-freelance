@@ -23,7 +23,7 @@ import com.jayway.jsonpath.JsonPath;
 class BackEndApplicationTests {
 
 	private static final String NEW_ROOM = """
-		{ "slug": "phong-test", "name": "Phòng test", "price": 500000, "maxGuests": 2,
+		{ "slug": "phong-test", "name": "Phòng test", "typeId": TYPE_ID, "price": 500000, "maxGuests": 2,
 		  "features": ["Wi-Fi"], "highlights": [{"title": "A", "text": "B"}],
 		  "reviews": [], "images": [] }
 		""";
@@ -69,8 +69,11 @@ class BackEndApplicationTests {
 		mvc.perform(get("/api/auth/me").header("Authorization", auth))
 			.andExpect(jsonPath("$.username").value("admin"));
 
+		Integer typeId = JsonPath.read(mvc.perform(get("/api/room-types")).andReturn().getResponse().getContentAsString(), "$[0].id");
+		String newRoom = NEW_ROOM.replace("TYPE_ID", typeId.toString());
+
 		String created = mvc.perform(post("/api/rooms").header("Authorization", auth)
-				.contentType(MediaType.APPLICATION_JSON).content(NEW_ROOM))
+				.contentType(MediaType.APPLICATION_JSON).content(newRoom))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.highlights[0].title").value("A"))
 			.andReturn().getResponse().getContentAsString();
@@ -78,8 +81,18 @@ class BackEndApplicationTests {
 
 		// Trùng đường dẫn -> 409
 		mvc.perform(post("/api/rooms").header("Authorization", auth)
-				.contentType(MediaType.APPLICATION_JSON).content(NEW_ROOM))
+				.contentType(MediaType.APPLICATION_JSON).content(newRoom))
 			.andExpect(status().isConflict());
+
+		// Không gửi đường dẫn -> tự tạo từ tên, trùng thì thêm -2
+		String noSlug = newRoom.replace("\"slug\": \"phong-test\", ", "");
+		String auto = mvc.perform(post("/api/rooms").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON).content(noSlug))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.slug").value("phong-test-2"))
+			.andReturn().getResponse().getContentAsString();
+		mvc.perform(delete("/api/rooms/" + JsonPath.read(auto, "$.id")).header("Authorization", auth))
+			.andExpect(status().isNoContent());
 
 		// Thiếu tên -> 400 kèm lỗi theo từng trường
 		mvc.perform(post("/api/rooms").header("Authorization", auth)
@@ -89,9 +102,10 @@ class BackEndApplicationTests {
 
 		mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/rooms/" + id)
 				.header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
-				.content(NEW_ROOM.replace("Phòng test", "Phòng đã sửa")))
+				.content(noSlug.replace("Phòng test", "Phòng đã sửa")))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.name").value("Phòng đã sửa"));
+			.andExpect(jsonPath("$.name").value("Phòng đã sửa"))
+			.andExpect(jsonPath("$.slug").value("phong-test")); // sửa tên không đổi đường dẫn
 
 		mvc.perform(delete("/api/rooms/" + id).header("Authorization", auth)).andExpect(status().isNoContent());
 		assertThat(mvc.perform(get("/api/rooms/" + id)).andReturn().getResponse().getStatus()).isEqualTo(404);

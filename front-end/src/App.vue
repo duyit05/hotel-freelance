@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import LightboxViewer from '@/components/ui/LightboxViewer.vue'
+import FloatingContact from '@/components/layout/FloatingContact.vue'
 
 const route = useRoute()
 </script>
@@ -19,6 +20,7 @@ const route = useRoute()
       <!-- Chừa chỗ cho thanh "Đặt phòng" cố định ở đáy màn hình điện thoại -->
       <AppFooter :class="route.name === 'room' && 'max-md:pb-24'" />
       <LightboxViewer />
+      <FloatingContact />
     </template>
   </template>
 </template>

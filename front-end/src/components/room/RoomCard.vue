@@ -23,6 +23,9 @@ defineProps({
       />
     </div>
     <div class="flex flex-1 flex-col gap-2 px-6 pt-[22px] pb-[26px]">
+      <span v-if="room.type" class="text-xs font-semibold tracking-wide text-primary uppercase">
+        {{ room.type.name }}
+      </span>
       <h3 class="text-[23px]">{{ room.name }}</h3>
       <div class="text-sm text-muted">{{ roomMeta(room, !compact) }}</div>
       <p v-if="!compact" class="text-sm text-muted">{{ room.shortDescription }}</p>

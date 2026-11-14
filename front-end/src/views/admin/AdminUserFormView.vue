@@ -3,21 +3,20 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminField from '@/components/admin/AdminField.vue'
-import AdminIcon from '@/components/admin/AdminIcon.vue'
 import AdminAlert from '@/components/admin/AdminAlert.vue'
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD, CARD_TITLE, INPUT } from '@/components/admin/styles'
 import { initials } from '@/utils/format'
 import { userApi } from '@/api/users'
 import { useAuth } from '@/composables/useAuth'
-import { useFlash } from '@/composables/useFlash'
+import { useToast } from '@/composables/useToast'
 
 const props = defineProps({
   id: { type: String, default: null },
 })
 
 const router = useRouter()
-const { flash } = useFlash()
+const { toast } = useToast()
 const { user: me } = useAuth()
 const isEdit = computed(() => !!props.id)
 
@@ -50,10 +49,13 @@ async function save() {
     const data = { fullName: form.fullName.trim(), password: form.password || null }
     if (!isEdit.value) data.username = form.username.trim()
     const u = isEdit.value ? await userApi.update(props.id, data) : await userApi.create(data)
-    flash(
-      isSelf.value
-        ? `Đã lưu tài khoản của bạn. Họ tên mới sẽ hiển thị ở góc trên sau lần đăng nhập tiếp theo.`
-        : `Đã lưu tài khoản "${u.fullName}".`,
+    toast(
+      !isEdit.value
+        ? `Đã thêm tài khoản "${u.fullName}"`
+        : isSelf.value
+          ? 'Đã lưu thay đổi. Họ tên mới hiển thị từ lần đăng nhập tiếp theo'
+          : `Đã lưu thay đổi cho "${u.fullName}"`,
+      { ms: isSelf.value ? 6000 : undefined },
     )
     router.push({ name: 'admin-users' })
   } catch (e) {
@@ -66,7 +68,7 @@ async function save() {
 </script>
 
 <template>
-  <div>
+  <div class="a-page">
     <AdminPageHeader
       :title="isEdit ? (isSelf ? 'Tài khoản của bạn' : 'Sửa tài khoản') : 'Thêm tài khoản'"
       :subtitle="isEdit ? 'Cập nhật họ tên hoặc đặt lại mật khẩu.' : 'Tạo tài khoản mới để đăng nhập trang quản trị.'"
@@ -74,19 +76,19 @@ async function save() {
       back-label="Danh sách tài khoản"
     />
 
-    <div v-if="loading" class="grid gap-6 lg:grid-cols-[1fr_300px]">
-      <div class="h-72 animate-pulse rounded-2xl bg-soft" />
-      <div class="h-48 animate-pulse rounded-2xl bg-soft" />
+    <div v-if="loading" class="grid max-w-[1000px] gap-5 lg:grid-cols-[minmax(0,1fr)_300px]" aria-busy="true" aria-label="Đang tải">
+      <div class="a-skel h-72 rounded-xl" />
+      <div class="a-skel h-48 rounded-xl" />
     </div>
 
-    <form v-else class="grid items-start gap-6 lg:grid-cols-[1fr_300px]" novalidate @submit.prevent="save">
-      <div class="space-y-6">
+    <form v-else class="grid max-w-[1000px] items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]" novalidate @submit.prevent="save">
+      <div class="space-y-5">
         <AdminAlert v-if="error" type="error">{{ error }}</AdminAlert>
 
-        <section :class="CARD">
+        <section :class="[CARD, 'p-5 sm:p-6']">
           <h2 :class="[CARD_TITLE, 'mb-5']">Thông tin tài khoản</h2>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <AdminField id="fullName" label="Họ và tên" required :error="errors.fullName" class="sm:col-span-2">
+          <div class="grid gap-4">
+            <AdminField id="fullName" label="Họ và tên" required :error="errors.fullName">
               <input
                 id="fullName"
                 v-model="form.fullName"
@@ -103,7 +105,6 @@ async function save() {
               :required="!isEdit"
               :error="errors.username"
               :hint="isEdit ? 'Không thể đổi tên đăng nhập sau khi tạo.' : 'Chữ không dấu, số, dấu . _ -'"
-              class="sm:col-span-2"
             >
               <input
                 id="username"
@@ -118,18 +119,13 @@ async function save() {
           </div>
         </section>
 
-        <section :class="CARD">
-          <h2 :class="[CARD_TITLE, 'mb-1']">{{ isEdit ? 'Đổi mật khẩu' : 'Mật khẩu' }}</h2>
-          <p class="mb-5 text-sm text-muted">
+        <section :class="[CARD, 'p-5 sm:p-6']">
+          <h2 :class="CARD_TITLE">{{ isEdit ? 'Đổi mật khẩu' : 'Mật khẩu' }}</h2>
+          <p class="mt-0.5 mb-5 text-[13px] text-ink-2">
             {{ isEdit ? 'Để trống nếu muốn giữ mật khẩu hiện tại.' : 'Ít nhất 6 ký tự, nên có cả chữ và số.' }}
           </p>
           <div class="grid gap-4 sm:grid-cols-2">
-            <AdminField
-              id="password"
-              :label="isEdit ? 'Mật khẩu mới' : 'Mật khẩu'"
-              :required="!isEdit"
-              :error="errors.password"
-            >
+            <AdminField id="password" :label="isEdit ? 'Mật khẩu mới' : 'Mật khẩu'" :required="!isEdit" :error="errors.password">
               <input
                 id="password"
                 v-model="form.password"
@@ -153,32 +149,31 @@ async function save() {
         </section>
       </div>
 
-      <aside :class="[CARD, 'lg:sticky lg:top-24']">
+      <aside :class="[CARD, 'overflow-hidden lg:sticky lg:top-[76px]']">
         <!-- Xem trước -->
-        <div class="mb-5 flex items-center gap-3 border-b border-line/70 pb-5">
-          <span
-            class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#efe6d8] font-semibold text-primary"
-          >
+        <div class="flex items-center gap-3 border-b border-line p-4">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface-2 text-[13px] font-semibold text-ink-2">
             {{ initials(form.fullName) }}
           </span>
           <div class="min-w-0 leading-tight">
-            <p class="truncate font-medium">{{ form.fullName || 'Họ và tên' }}</p>
-            <p class="truncate text-sm text-muted">@{{ form.username || 'ten-dang-nhap' }}</p>
+            <p class="truncate font-semibold">{{ form.fullName || 'Họ và tên' }}</p>
+            <p class="truncate text-[13px] text-muted">@{{ form.username || 'ten-dang-nhap' }}</p>
           </div>
         </div>
 
-        <div class="space-y-2">
+        <dl class="a-kv border-b border-line p-4">
+          <dt>Vai trò</dt>
+          <dd>Quản trị viên</dd>
+          <dt>Quyền</dt>
+          <dd>Phòng và tài khoản</dd>
+        </dl>
+
+        <div class="space-y-2 p-4">
           <button type="submit" :class="[BTN_PRIMARY, 'w-full']" :disabled="saving">
-            <AdminIcon name="save" class="size-[18px]" />
             {{ saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Thêm tài khoản' }}
           </button>
           <RouterLink :to="{ name: 'admin-users' }" :class="[BTN_SECONDARY, 'w-full']">Hủy</RouterLink>
         </div>
-
-        <p class="mt-5 flex gap-2 rounded-xl bg-soft/60 p-3 text-[13px] text-muted">
-          <AdminIcon name="shield" class="mt-px size-4 shrink-0 text-accent" />
-          <span>Vai trò <strong class="text-ink">Quản trị viên</strong>: quản lý phòng và các tài khoản khác.</span>
-        </p>
       </aside>
     </form>
   </div>

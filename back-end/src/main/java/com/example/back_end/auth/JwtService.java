@@ -36,7 +36,7 @@ public class JwtService {
             .toList();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-            .issuer("moclan-hotel")
+            .issuer("duynhat-hotel")
             .issuedAt(now)
             .expiresAt(expiresAt)
             .subject(auth.getName())

@@ -18,9 +18,9 @@ import { img } from '@/data/images'
   <main>
     <PageHero
       :image="img('resort')"
-      alt="Khách sạn Mộc Lan về đêm"
-      title="Về Mộc Lan Hotel"
-      subtitle="Khách sạn 4 sao trên đường Võ Nguyên Giáp, nhìn ra biển Mỹ Khê, Đà Nẵng."
+      alt="Khách sạn Duy Nhất về đêm"
+      title="Về Duy Nhất Hotel"
+      subtitle="Khách sạn 4 sao trên đường Tây Sơn, vài phút ra biển Quy Nhơn, tỉnh Gia Lai."
     />
 
     <StoryIntro />
@@ -33,9 +33,9 @@ import { img } from '@/data/images'
     <PageSection>
       <InfoSplit
         :image="img('restaurant')"
-        alt="Nhà hàng Mộc Lan"
+        alt="Nhà hàng Duy Nhất"
         title="Nhà hàng và quầy bar"
-        lead="Nhà hàng tầng 2 phục vụ hải sản tươi lấy từ chợ Sơn Trà mỗi sáng, cùng các món Âu đơn giản. Quầy bar tầng thượng mở đến khuya, cạnh hồ bơi."
+        lead="Nhà hàng tầng 2 phục vụ hải sản tươi của ngư dân Quy Nhơn mỗi sáng, cùng các món Âu đơn giản. Quầy bar tầng thượng mở đến khuya, cạnh hồ bơi."
         :items="DINING_HOURS"
       />
     </PageSection>

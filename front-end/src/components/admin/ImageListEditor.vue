@@ -42,32 +42,30 @@ function makeCover(i) {
       <figure
         v-for="(src, i) in images"
         :key="src + i"
-        class="group relative aspect-4/3 overflow-hidden rounded-xl border border-line/70 bg-img"
+        class="overflow-hidden rounded-lg border border-line bg-surface"
       >
-        <img :src="src" alt="" class="size-full object-cover" />
-        <span v-if="i === 0" class="absolute top-2 left-2 rounded-full bg-primary/90 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur">
-          Ảnh bìa
-        </span>
-        <div class="absolute inset-x-2 bottom-2 flex justify-end gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-          <button v-if="i > 0" type="button" :class="BTN_SMALL" @click="makeCover(i)">Đặt làm bìa</button>
-          <button type="button" :class="[BTN_SMALL, 'hover:border-red-500! hover:text-red-600!']" @click="remove(i)">
-            Xóa
+        <img :src="src" alt="" class="aspect-4/3 w-full bg-surface-2 object-cover" />
+        <figcaption class="flex items-center justify-between gap-1 border-t border-line px-2 py-1.5">
+          <span v-if="i === 0" class="a-badge tone-c1 h-[22px]! px-2! text-xs!">Ảnh bìa</span>
+          <button v-else type="button" :class="[BTN_SMALL, 'h-[26px]! px-2!']" @click="makeCover(i)">Đặt làm bìa</button>
+          <button type="button" class="a-btn a-btn--icon a-btn--danger size-[26px]!" :aria-label="`Xóa ảnh ${i + 1}`" title="Xóa ảnh" @click="remove(i)">
+            <AdminIcon name="trash" class="size-4" />
           </button>
-        </div>
+        </figcaption>
       </figure>
 
       <button
         type="button"
-        class="flex aspect-4/3 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-line bg-bg/50 text-sm text-muted transition-colors hover:border-primary/50 hover:bg-soft/40 hover:text-primary disabled:opacity-60"
+        class="flex min-h-[120px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-line text-[13px] font-medium text-ink-2 hover:bg-surface-2 hover:text-ink disabled:cursor-wait disabled:opacity-60"
         :disabled="uploading > 0"
         @click="input.click()"
       >
-        <AdminIcon name="upload" class="size-6" />
+        <AdminIcon name="upload" class="size-5" />
         {{ uploading ? `Đang tải lên ${uploading} ảnh...` : 'Thêm ảnh' }}
       </button>
     </div>
     <input ref="input" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" @change="onFiles" />
-    <p v-if="error" class="mt-2 text-sm text-red-600">{{ error }}</p>
-    <p v-else class="mt-2 text-sm text-muted">JPG, PNG hoặc WEBP, tối đa 5MB mỗi ảnh. Ảnh đầu tiên là ảnh bìa.</p>
+    <p v-if="error" class="mt-2 text-[13px] text-danger">{{ error }}</p>
+    <p v-else class="mt-2 text-[13px] text-muted">JPG, PNG hoặc WEBP, tối đa 5MB mỗi ảnh. Ảnh đầu tiên là ảnh bìa.</p>
   </div>
 </template>

@@ -12,12 +12,13 @@ import jakarta.validation.constraints.Size;
 
 /** Dữ liệu admin gửi lên khi thêm/sửa phòng */
 public record RoomRequest(
-    @NotBlank(message = "Vui lòng nhập đường dẫn")
+    /** Không bắt buộc: bỏ trống thì hệ thống tự tạo từ tên phòng (thêm mới) hoặc giữ nguyên (khi sửa) */
     @Size(max = 100)
     @Pattern(regexp = "[a-z0-9]+(-[a-z0-9]+)*", message = "Chỉ dùng chữ thường không dấu, số và dấu gạch ngang")
     String slug,
 
     @NotBlank(message = "Vui lòng nhập tên phòng") @Size(max = 150) String name,
+    @NotNull(message = "Vui lòng chọn loại phòng") Long typeId,
     @NotNull(message = "Vui lòng nhập giá") @Min(value = 0, message = "Giá không được âm") Long price,
     @Size(max = 50) String size,
     @Size(max = 50) String guests,
@@ -42,10 +43,10 @@ public record RoomRequest(
     public record ReviewDto(@NotBlank @Size(max = 1000) String quote, @Size(max = 150) String author) {
     }
 
-    /** Ghi dữ liệu vào entity (giữ nguyên các collection để Hibernate cập nhật đúng) */
-    void applyTo(Room room) {
-        room.setSlug(slug);
+    /** Ghi dữ liệu vào entity, trừ slug do RoomService xử lý (giữ nguyên các collection để Hibernate cập nhật đúng) */
+    void applyTo(Room room, RoomType type) {
         room.setName(name);
+        room.setType(type);
         room.setPrice(price);
         room.setSize(size);
         room.setGuests(guests);

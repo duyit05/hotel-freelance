@@ -51,6 +51,12 @@ const router = createRouter({
           meta: { title: 'Sửa phòng', section: 'rooms' },
         },
         {
+          path: 'loai-phong',
+          name: 'admin-room-types',
+          component: () => import('@/views/admin/AdminRoomTypesView.vue'),
+          meta: { title: 'Loại phòng', section: 'room-types' },
+        },
+        {
           path: 'tai-khoan',
           name: 'admin-users',
           component: () => import('@/views/admin/AdminUsersView.vue'),

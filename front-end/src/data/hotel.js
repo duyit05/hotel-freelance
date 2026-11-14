@@ -1,9 +1,22 @@
 /* ===== Nội dung tĩnh của khách sạn: sửa chữ tại đây ===== */
 
-export const PHONE = { label: '0900 000 000', tel: '0900000000' }
-export const ZALO_URL = 'https://zalo.me/0900000000'
-export const EMAIL = 'datphong@moclanhotel.vn'
-export const MAP_EMBED = 'https://maps.google.com/maps?q=My%20Khe%20Beach%20Da%20Nang&z=15&output=embed'
+/** Số chính (cố định) và số di động; nút "Gọi đặt phòng" dùng số đầu tiên */
+export const PHONES = [
+  { label: '0256 64 65 68', tel: '0256646568' },
+  { label: '0845 64 65 68', tel: '0845646568' },
+]
+export const PHONE = PHONES[0]
+export const ZALO_URL = 'https://zalo.me/0845646568'
+/** Fanpage Facebook: thay bằng link thật của khách sạn */
+export const FACEBOOK_URL = 'https://www.facebook.com/duynhathotel'
+export const EMAIL = 'datphong@duynhathotel.vn'
+export const ADDRESS = {
+  street: '85-87 Tây Sơn',
+  area: 'phường Quy Nhơn Nam, tỉnh Gia Lai',
+  full: '85-87 Tây Sơn, phường Quy Nhơn Nam, tỉnh Gia Lai',
+}
+export const MAP_URL = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('85-87 Tây Sơn, Quy Nhơn')
+export const MAP_EMBED = `https://maps.google.com/maps?q=${encodeURIComponent('85-87 Tây Sơn, Quy Nhơn, Việt Nam')}&z=16&output=embed`
 
 export const NAV_LINKS = [
   { label: 'Về khách sạn', to: '/khach-san' },
@@ -21,9 +34,9 @@ export const HERO_SLIDES = [
 export const GUEST_OPTIONS = ['1 người lớn', '2 người lớn', '2 người lớn, 1 trẻ em', 'Gia đình 4 người']
 
 export const FACTS = [
-  { value: 48, label: 'phòng nghỉ' },
-  { value: 5, suffix: ' phút', label: 'đi bộ ra biển' },
-  { value: 4.8, suffix: '/5', label: 'đánh giá của khách' },
+  { value: 22, label: 'phòng nghỉ' },
+  { value: 600, suffix: ' m', label: 'ra bãi biển Quy Nhơn' },
+  { value: 4.9, suffix: '/5', label: 'đánh giá của khách' },
 ]
 
 // span: class Tailwind để tạo bố cục lưới ảnh
@@ -39,7 +52,7 @@ export const GALLERY = [
 export const AMENITIES = [
   { title: 'Hồ bơi tầng thượng', text: 'Mở cửa từ 6 giờ đến 21 giờ, có khăn tắm tại chỗ.' },
   { title: 'Bữa sáng tự chọn', text: 'Món Việt và món Âu, phục vụ từ 6 giờ 30 đến 10 giờ.' },
-  { title: 'Đưa đón sân bay', text: 'Miễn phí một chiều khi đặt từ 2 đêm trở lên.' },
+  { title: 'Đưa đón sân bay Phù Cát', text: 'Miễn phí một chiều khi đặt từ 2 đêm trở lên.' },
   { title: 'Wi-Fi tốc độ cao', text: 'Phủ sóng toàn bộ phòng và khu vực chung.' },
   { title: 'Cho thuê xe máy', text: 'Đặt tại quầy lễ tân, có mũ bảo hiểm kèm theo.' },
   { title: 'Giữ hành lý', text: 'Gửi đồ trước giờ nhận phòng hoặc sau khi trả phòng.' },
@@ -48,11 +61,11 @@ export const AMENITIES = [
 export const REVIEWS = [
   { quote: 'Phòng sạch, nhân viên nhiệt tình. Sáng nào cũng đi bộ ra biển ngắm bình minh rất tiện.', author: 'Chị Hà, Hà Nội' },
   { quote: 'Bữa sáng ngon, nhiều món Việt. Hồ bơi trên tầng thượng buổi tối rất mát.', author: 'Anh Minh, TP. Hồ Chí Minh' },
-  { quote: 'Đi cùng hai bé, phòng gia đình rộng rãi. Lễ tân hỗ trợ đặt tour Bà Nà nhanh gọn.', author: 'Chị Thảo, Cần Thơ' },
+  { quote: 'Đi cùng hai bé, phòng gia đình rộng rãi. Lễ tân hỗ trợ đặt tour Kỳ Co, Eo Gió nhanh gọn.', author: 'Chị Thảo, Cần Thơ' },
 ]
 
 export const CONTACT = [
-  { label: 'Địa chỉ', value: '123 Võ Nguyên Giáp, Sơn Trà, Đà Nẵng' },
+  { label: 'Địa chỉ', value: ADDRESS.full, href: MAP_URL },
   { label: 'Điện thoại', value: PHONE.label, href: `tel:${PHONE.tel}` },
   { label: 'Email', value: EMAIL, href: `mailto:${EMAIL}` },
   { label: 'Nhận phòng', value: 'Từ 14:00' },
@@ -62,9 +75,9 @@ export const CONTACT = [
 /* ----- Trang giới thiệu khách sạn ----- */
 export const STATS = [
   { value: '2015', label: 'năm thành lập' },
-  { value: '48', label: 'phòng nghỉ' },
-  { value: '400 m', label: 'đến bãi biển' },
-  { value: '4,8/5', label: 'từ 1.200 đánh giá' },
+  { value: '22', label: 'phòng nghỉ' },
+  { value: '600 m', label: 'đến bãi biển' },
+  { value: '4,9/5', label: 'từ 1.200 đánh giá' },
 ]
 
 export const PHOTO_CATEGORIES = [
@@ -98,17 +111,18 @@ export const DINING_HOURS = [
 
 export const FACILITIES = [
   { title: 'Thư giãn', items: ['Hồ bơi vô cực tầng thượng', 'Phòng tập gym mở 24 giờ', 'Spa và massage chân', 'Ghế tắm nắng và dù ở bãi biển'] },
-  { title: 'Đi lại', items: ['Đưa đón sân bay', 'Cho thuê xe máy và xe đạp', 'Đặt tour Bà Nà, Hội An', 'Bãi đỗ ô tô miễn phí'] },
+  { title: 'Đi lại', items: ['Đưa đón sân bay', 'Cho thuê xe máy và xe đạp', 'Đặt tour Kỳ Co, Eo Gió, Cù Lao Xanh', 'Bãi đỗ ô tô miễn phí'] },
   { title: 'Tiện lợi', items: ['Lễ tân 24 giờ', 'Giặt ủi trong ngày', 'Giữ hành lý miễn phí', 'Phòng họp 20 chỗ'] },
 ]
 
+// Khoảng cách ước tính từ 85-87 Tây Sơn, nên kiểm tra lại trên Google Maps
 export const NEARBY = [
-  { label: 'Bãi biển Mỹ Khê', value: '400 m' },
-  { label: 'Chợ đêm Sơn Trà', value: '1,5 km' },
-  { label: 'Cầu Rồng', value: '3 km' },
-  { label: 'Sân bay Đà Nẵng', value: '6 km' },
-  { label: 'Phố cổ Hội An', value: '28 km' },
-  { label: 'Bà Nà Hills', value: '30 km' },
+  { label: 'Bãi biển Quy Nhơn', value: '600 m' },
+  { label: 'Ghềnh Ráng Tiên Sa, mộ Hàn Mặc Tử', value: '2 km' },
+  { label: 'Quảng trường Nguyễn Tất Thành', value: '3 km' },
+  { label: 'Tháp Đôi', value: '5 km' },
+  { label: 'Eo Gió, Kỳ Co', value: '25 km' },
+  { label: 'Sân bay Phù Cát', value: '35 km' },
 ]
 
 export const FAQS = [

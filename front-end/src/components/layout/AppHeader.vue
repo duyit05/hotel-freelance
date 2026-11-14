@@ -38,7 +38,7 @@ const linkClass = 'block px-5 py-3 text-[15px] no-underline underline-offset-[5p
     ]"
   >
     <div class="wrap flex h-[72px] items-center justify-between">
-      <AppLink to="/" class="font-serif text-[22px] no-underline">Mộc Lan Hotel</AppLink>
+      <AppLink to="/" class="font-serif text-[22px] no-underline">Duy Nhất Hotel</AppLink>
 
       <button
         type="button"

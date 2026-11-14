@@ -29,6 +29,11 @@ async function loadRooms({ force = false } = {}) {
 /** Gọi sau khi admin thêm/sửa/xóa để trang công khai thấy dữ liệu mới */
 const invalidateRooms = () => (rooms.value = [])
 
+/** Loại phòng đang lọc ở mục "Các loại phòng" trang chủ (null = tất cả), dùng chung để thanh tìm kiếm có thể bỏ lọc */
+const typeFilter = ref(null)
+/** Trang đang xem ở mục "Các loại phòng" trang chủ */
+const roomsPage = ref(1)
+
 export function useRooms() {
-  return { rooms, loading, error, loadRooms, invalidateRooms }
+  return { rooms, loading, error, loadRooms, invalidateRooms, typeFilter, roomsPage }
 }

@@ -76,10 +76,10 @@ onBeforeUnmount(() => {
 
     <div class="wrap relative z-[2] w-full pb-12">
       <h1 class="mb-4 max-w-[14ch] animate-rise text-[clamp(38px,6vw,70px)]">
-        Nghỉ ngơi yên tĩnh, cách biển năm phút đi bộ
+        Nghỉ ngơi yên tĩnh, vài phút ra biển Quy Nhơn
       </h1>
       <p class="mb-8 max-w-[46ch] animate-rise text-lg opacity-95 [animation-delay:.15s]">
-        48 phòng sáng sủa trên phố biển Mỹ Khê, bữa sáng phục vụ đến 10 giờ và lễ tân hỗ trợ suốt 24 giờ.
+        22 phòng sáng sủa trên đường Tây Sơn, gần bãi biển trung tâm Quy Nhơn, bữa sáng phục vụ đến 10 giờ và lễ tân hỗ trợ suốt 24 giờ.
       </p>
       <AppLink
         to="/khach-san"

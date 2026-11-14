@@ -17,9 +17,6 @@ defineProps({
       class="absolute inset-0 bg-[linear-gradient(to_top,rgba(32,25,18,.72),rgba(32,25,18,.15)_60%,rgba(32,25,18,.4))]"
     />
     <div class="wrap relative z-[2] w-full animate-rise pb-14 [animation-delay:.2s]">
-      <AppLink to="/" class="mb-[18px] inline-block text-[15px] text-white no-underline opacity-85 hover:opacity-100">
-        Về trang chủ
-      </AppLink>
       <h1 class="mb-2.5 text-[clamp(36px,5.5vw,64px)]">{{ title }}</h1>
       <p v-if="subtitle" class="max-w-[50ch] text-lg opacity-95">{{ subtitle }}</p>
     </div>

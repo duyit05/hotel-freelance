@@ -2,13 +2,8 @@
   <footer class="border-t border-line py-7 text-sm text-muted">
     <div class="wrap flex flex-wrap justify-between gap-3">
       <span>
-        © 2026 Mộc Lan Hotel
+        © 2026 Duy Nhất Hotel
         <RouterLink to="/admin" class="ml-3 text-muted/70 no-underline hover:text-primary">Quản trị</RouterLink>
-      </span>
-      <span class="flex gap-4">
-        <span>Facebook</span>
-        <span>Zalo</span>
-        <span>Instagram</span>
       </span>
     </div>
   </footer>

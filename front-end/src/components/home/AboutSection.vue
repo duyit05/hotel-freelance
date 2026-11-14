@@ -24,7 +24,7 @@ import { img } from '@/data/images'
       <div v-reveal="1">
         <SectionTitle>Một khách sạn nhỏ, chăm chút từng chi tiết</SectionTitle>
         <LeadText>
-          Mộc Lan mở cửa từ năm 2015 trên đường Võ Nguyên Giáp. Chúng tôi giữ quy mô vừa phải để mỗi vị khách
+          Duy Nhất mở cửa từ năm 2015 trên đường Tây Sơn, Quy Nhơn. Chúng tôi giữ quy mô vừa phải để mỗi vị khách
           đều được phục vụ chu đáo, từ lúc nhận phòng đến khi ra sân bay.
         </LeadText>
         <div class="mt-8 flex flex-wrap gap-10 border-t border-line pt-6">

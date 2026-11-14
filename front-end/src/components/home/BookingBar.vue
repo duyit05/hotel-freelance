@@ -3,7 +3,9 @@ import { ref } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import FormField from '@/components/ui/FormField.vue'
 import { useBooking } from '@/composables/useBooking'
-import { GUEST_OPTIONS, PHONE } from '@/data/hotel'
+import { useRooms } from '@/composables/useRooms'
+import { smoothScrollTo } from '@/utils/smoothScroll'
+import { GUEST_OPTIONS } from '@/data/hotel'
 import { addDays, nightsBetween, todayISO } from '@/utils/format'
 
 const { checkin, checkout } = useBooking()
@@ -11,12 +13,18 @@ const guests = ref(GUEST_OPTIONS[1])
 const note = ref('')
 const today = todayISO()
 
+const { typeFilter, roomsPage } = useRooms()
+
+/** Ngày hợp lệ: bỏ bộ lọc loại phòng và cuộn xuống mục "Các loại phòng" để khách xem tất cả phòng */
 function check() {
-  const n = nightsBetween(checkin.value, checkout.value)
-  note.value =
-    n < 1
-      ? 'Ngày trả phòng phải sau ngày nhận phòng. Vui lòng chọn lại.'
-      : `Còn phòng cho ${n} đêm. Xem các loại phòng bên dưới hoặc gọi ${PHONE.label} để giữ phòng.`
+  if (nightsBetween(checkin.value, checkout.value) < 1) {
+    note.value = 'Ngày trả phòng phải sau ngày nhận phòng. Vui lòng chọn lại.'
+    return
+  }
+  note.value = ''
+  typeFilter.value = null
+  roomsPage.value = 1
+  smoothScrollTo(document.getElementById('phong')) // chừa 80px cho thanh menu
 }
 
 const field = 'px-4 py-2 border-line'

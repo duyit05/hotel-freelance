@@ -58,7 +58,7 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/rooms/**", "/uploads/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/rooms/**", "/api/room-types/**", "/uploads/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/**").hasRole("ADMIN")
                 .anyRequest().denyAll())
