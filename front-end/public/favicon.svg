@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Icon Duy Nhất Hotel: chữ D (serif) trên nền nâu chủ đạo của website (--color-primary) -->
+  <rect width="64" height="64" rx="14" fill="#5B4636"/>
+  <text x="32" y="46" text-anchor="middle" font-family="Lora, Georgia, 'Times New Roman', serif" font-size="40" font-weight="600" fill="#FAF7F0">D</text>
+  <rect x="20" y="50" width="24" height="2.5" rx="1.25" fill="#B89A6A"/>
+</svg>
