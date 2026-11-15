@@ -1,0 +1,4 @@
+# Script chạy trên Linux phải giữ xuống dòng LF
+*.sh text eol=lf
+Caddyfile text eol=lf
+*.yaml text eol=lf

@@ -23,13 +23,13 @@ import io.minio.errors.ErrorResponseException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Lưu ảnh trên MinIO (app.storage=minio, mặc định).
+ * Lưu ảnh trên MinIO/S3 (app.storage=minio, tùy chọn; mặc định dùng LocalStorageBackend).
  * Khi khởi động: tạo bucket nếu chưa có, chép ảnh cũ trong app.upload-dir (nếu còn) lên MinIO.
  * Bucket để private, ảnh được trả về qua back-end tại /uploads/<tên-file>.
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "app", name = "storage", havingValue = "minio", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "app", name = "storage", havingValue = "minio")
 public class MinioStorageBackend implements StorageBackend {
 
     private static final long PART_SIZE = 10L * 1024 * 1024;
@@ -57,7 +57,7 @@ public class MinioStorageBackend implements StorageBackend {
         } catch (Exception e) {
             throw new IllegalStateException(
                 "Không kết nối được MinIO tại " + endpoint + " (bucket '" + bucket + "'). "
-                    + "Hãy chạy 'docker compose up -d' hoặc đặt STORAGE_TYPE=local", e);
+                    + "Hãy kiểm tra MinIO đang chạy hoặc đặt STORAGE_TYPE=local", e);
         }
     }
 

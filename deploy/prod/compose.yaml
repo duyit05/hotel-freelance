@@ -1,0 +1,76 @@
+# Chạy toàn bộ hệ thống trên VPS (trong thư mục /opt/hotel):  docker compose up -d
+# Image hotel-backend và hotel-frontend được build trên máy dev rồi gửi lên bằng scripts/deploy.sh
+name: hotel
+
+# Giới hạn log mỗi container: tối đa 3 file x 10 MB để không đầy ổ cứng
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: hotel
+      POSTGRES_USER: ${DB_USERNAME:-hotel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Chưa đặt DB_PASSWORD trong .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: *logging
+    # Không mở cổng ra ngoài, chỉ back-end trong mạng nội bộ Docker kết nối được
+
+  backend:
+    image: hotel-backend:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hotel
+      DB_USERNAME: ${DB_USERNAME:-hotel}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Chưa đặt JWT_SECRET trong .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Chưa đặt ADMIN_PASSWORD trong .env}
+      ADMIN_FULL_NAME: ${ADMIN_FULL_NAME:-Quản trị viên}
+      STORAGE_TYPE: local
+      UPLOAD_DIR: /app/uploads
+      CORS_ORIGINS: https://${DOMAIN}
+      # VPS 2 GB RAM: giới hạn heap Java 512 MB
+      JAVA_TOOL_OPTIONS: -Xmx512m -XX:+UseSerialGC
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+    logging: *logging
+
+  # Front-end: image gồm file Vue đã build (dist) + web server Caddy.
+  # Caddy vừa trả trang web, vừa làm HTTPS, vừa chuyển /api và /uploads sang backend.
+  frontend:
+    image: hotel-frontend:latest
+    depends_on:
+      - backend
+    environment:
+      DOMAIN: ${DOMAIN:?Chưa đặt DOMAIN trong .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

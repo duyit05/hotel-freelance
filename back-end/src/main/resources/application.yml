@@ -30,9 +30,9 @@ server:
 
 # Lưu ảnh upload
 app:
-  # minio: lưu trên MinIO (mặc định) | local: lưu vào thư mục upload-dir
-  storage: ${STORAGE_TYPE:minio}
-  # Chế độ local lưu ảnh vào thư mục này.
+  # local: lưu vào thư mục upload-dir (mặc định) | minio: lưu trên MinIO/S3
+  storage: ${STORAGE_TYPE:local}
+  # Chế độ local lưu ảnh vào thư mục này. Khi chạy thật nên dùng đường dẫn tuyệt đối.
   # Chế độ minio: ảnh cũ còn trong thư mục này được tự chép lên MinIO khi khởi động.
   upload-dir: ${UPLOAD_DIR:uploads}
   minio:

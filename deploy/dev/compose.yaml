@@ -1,0 +1,25 @@
+# PostgreSQL cho môi trường DEV (máy lập trình). Chạy trong thư mục deploy/dev:
+#   docker compose --env-file ../../back-end/.env up -d
+# Khi đó trong back-end/.env đặt: DB_URL=jdbc:postgresql://localhost:5433/hotel
+# (Không cần nếu máy đã cài sẵn PostgreSQL.)
+name: hotel-dev
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: hotel-postgres
+    environment:
+      POSTGRES_DB: hotel
+      POSTGRES_USER: ${DB_USERNAME:-hotel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hotel}
+    ports:
+      # Máy đã có PostgreSQL cài sẵn chiếm cổng 5432 nên container dùng cổng 5433
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    # Giữ tên volume cũ (khi file còn nằm ở back-end/) để không mất dữ liệu dev đã có
+    name: back-end_hotel-pgdata

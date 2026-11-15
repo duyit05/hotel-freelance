@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 
 import com.example.back_end.config.AppProperties;
 
-/** Lưu ảnh vào thư mục app.upload-dir trên máy chạy back-end (app.storage=local, dùng cho test/dev) */
+/** Lưu ảnh vào thư mục app.upload-dir trên máy chạy back-end (app.storage=local, mặc định) */
 @Component
-@ConditionalOnProperty(prefix = "app", name = "storage", havingValue = "local")
+@ConditionalOnProperty(prefix = "app", name = "storage", havingValue = "local", matchIfMissing = true)
 public class LocalStorageBackend implements StorageBackend {
 
     private final Path root;
