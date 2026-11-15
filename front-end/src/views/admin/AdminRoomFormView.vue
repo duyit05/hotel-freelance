@@ -233,7 +233,7 @@ const typeOption = (active) => [
                   type="number"
                   min="0"
                   step="50000"
-                  :class="[INPUT, 'pr-14 text-right']"
+                  :class="[INPUT, 'pr-14 text-center']"
                   :aria-invalid="!!errors.price"
                 />
                 <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[13px] text-muted">VNĐ</span>

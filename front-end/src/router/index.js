@@ -89,13 +89,15 @@ const router = createRouter({
   },
 })
 
-// Chặn vào trang admin khi chưa đăng nhập (hoặc token đã hết hạn)
-router.beforeEach((to) => {
-  const { isAdmin } = useAuth()
-  if (to.meta.requiresAdmin && !isAdmin()) {
+// Chặn vào trang admin khi chưa đăng nhập. Access token chỉ nằm trong bộ nhớ nên sau F5
+// sẽ thử khôi phục phiên bằng cookie refresh trước khi quyết định.
+router.beforeEach(async (to) => {
+  if (!to.meta.requiresAdmin && !to.meta.guestOnly) return
+  const loggedIn = await useAuth().ensureSession()
+  if (to.meta.requiresAdmin && !loggedIn) {
     return { name: 'admin-login', query: { redirect: to.fullPath } }
   }
-  if (to.meta.guestOnly && isAdmin()) {
+  if (to.meta.guestOnly && loggedIn) {
     return { name: 'admin-dashboard' }
   }
 })

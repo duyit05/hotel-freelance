@@ -18,7 +18,7 @@ public record UserRequest(
     @Size(max = 100, message = "Họ và tên tối đa 100 ký tự")
     String fullName,
 
-    @Size(min = 6, max = 100, message = "Mật khẩu từ 6 đến 100 ký tự")
+    @Size(min = 8, max = 100, message = "Mật khẩu từ 8 đến 100 ký tự")
     String password) {
 
     /** Chuỗi rỗng coi như không nhập */

@@ -47,6 +47,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ProblemDetail handleTooLarge(MaxUploadSizeExceededException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE, "Ảnh quá lớn, tối đa 5MB mỗi ảnh");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE, "Ảnh quá lớn, tối đa 10MB mỗi ảnh");
     }
 }

@@ -84,7 +84,11 @@ df -h                                # xem ổ cứng
 
 ## Backup và khôi phục
 
-Backup tự chạy lúc 2h sáng, lưu ở `/root/hotel-backups` (giữ 14 ngày). Chạy tay: `bash /opt/hotel/backup.sh`.
+Backup tự chạy lúc 2h sáng, lưu ở `/root/hotel-backups`:
+- Database: mỗi ngày, giữ 14 ngày (mỗi file chỉ vài MB).
+- Ảnh: mỗi Chủ nhật, chỉ giữ 2 bản mới nhất (để không đầy ổ 20 GB).
+
+Chạy tay: `bash /opt/hotel/backup.sh` (thêm `FORCE_UPLOADS=1` ở đầu để backup cả ảnh ngay).
 
 **Quan trọng**: backup nằm trên chính VPS thì mất VPS là mất luôn. Nên cài
 [rclone](https://rclone.org/install/), cấu hình một remote (vd Google Drive tên `gdrive`), rồi sửa cron
@@ -101,4 +105,15 @@ docker compose exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTG
   < /root/hotel-backups/db_<ngày>.dump
 # Ảnh
 docker compose exec -T backend tar -xzf - -C /app/uploads < /root/hotel-backups/uploads_<ngày>.tar.gz
+```
+
+### Thùng rác ảnh
+
+Ảnh bị bỏ khỏi phòng (hoặc phòng bị xóa), và ảnh upload mà không lưu vào phòng nào sau 1 ngày,
+được chuyển vào `/app/uploads/.trash`. Back-end tự xóa hẳn sau 7 ngày (chạy lúc 3h30 sáng).
+Lỡ xóa nhầm thì trong 7 ngày đó có thể lấy lại, rồi thêm lại link `/uploads/<tên-file>` cho phòng:
+```bash
+cd /opt/hotel
+docker compose exec backend ls -lt /app/uploads/.trash        # xem ảnh trong thùng rác
+docker compose exec backend mv /app/uploads/.trash/<tên-file> /app/uploads/
 ```

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -13,11 +15,17 @@ import org.springframework.stereotype.Component;
 import com.example.back_end.config.AppProperties;
 
 import io.minio.BucketExistsArgs;
+import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
+import io.minio.ListObjectsArgs;
+import io.minio.Result;
+import io.minio.messages.Item;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.StatObjectArgs;
 import io.minio.errors.ErrorResponseException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MinioStorageBackend implements StorageBackend {
 
     private static final long PART_SIZE = 10L * 1024 * 1024;
+    private static final String TRASH_PREFIX = "trash/";
 
     private final MinioClient client;
     private final String bucket;
@@ -132,6 +141,61 @@ public class MinioStorageBackend implements StorageBackend {
         } catch (Exception e) {
             throw new IllegalStateException("Lỗi MinIO khi đọc ảnh: " + name, e);
         }
+    }
+
+    @Override
+    public List<FileInfo> list() {
+        return listObjects(null);
+    }
+
+    /** MinIO không có "đổi tên": copy sang trash/<tên> (object mới nên lastModified = lúc bỏ vào) rồi xóa bản cũ */
+    @Override
+    public void moveToTrash(String name) {
+        if (!exists(name)) {
+            return;
+        }
+        try {
+            client.copyObject(CopyObjectArgs.builder()
+                .bucket(bucket)
+                .object(TRASH_PREFIX + name)
+                .source(CopySource.builder().bucket(bucket).object(name).build())
+                .build());
+            client.removeObject(RemoveObjectArgs.builder().bucket(bucket).object(name).build());
+        } catch (Exception e) {
+            throw new IllegalStateException("Lỗi MinIO khi chuyển ảnh vào thùng rác: " + name, e);
+        }
+    }
+
+    @Override
+    public List<FileInfo> listTrash() {
+        return listObjects(TRASH_PREFIX);
+    }
+
+    @Override
+    public void deleteFromTrash(String name) {
+        try {
+            client.removeObject(RemoveObjectArgs.builder().bucket(bucket).object(TRASH_PREFIX + name).build());
+        } catch (Exception e) {
+            throw new IllegalStateException("Lỗi MinIO khi xóa ảnh trong thùng rác: " + name, e);
+        }
+    }
+
+    /** prefix = null: chỉ các file ở gốc bucket (bỏ qua thư mục trash/) */
+    private List<FileInfo> listObjects(String prefix) {
+        List<FileInfo> result = new ArrayList<>();
+        try {
+            for (Result<Item> r : client.listObjects(ListObjectsArgs.builder().bucket(bucket).prefix(prefix).build())) {
+                Item item = r.get();
+                if (item.isDir()) {
+                    continue;
+                }
+                String name = prefix == null ? item.objectName() : item.objectName().substring(prefix.length());
+                result.add(new FileInfo(name, item.lastModified().toInstant()));
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Lỗi MinIO khi liệt kê ảnh", e);
+        }
+        return result;
     }
 
     private static boolean isNotFound(ErrorResponseException e) {

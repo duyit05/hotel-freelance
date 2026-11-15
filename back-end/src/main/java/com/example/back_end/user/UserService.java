@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.back_end.auth.RefreshTokenService;
 import com.example.back_end.common.FieldValidationException;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class UserService {
 
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokens;
 
     @Transactional(readOnly = true)
     public List<UserResponse> findAll() {
@@ -55,12 +57,13 @@ public class UserService {
         return UserResponse.from(users.save(user));
     }
 
-    /** Không đổi username; chỉ đổi mật khẩu khi có nhập */
+    /** Không đổi username; chỉ đổi mật khẩu khi có nhập (đổi mật khẩu thì đăng xuất mọi thiết bị) */
     public UserResponse update(Long id, UserRequest req) {
         User user = get(id);
         user.setFullName(req.fullName());
         if (req.password() != null) {
             user.setPassword(passwordEncoder.encode(req.password()));
+            refreshTokens.revokeAll(user);
         }
         return UserResponse.from(user);
     }
@@ -73,6 +76,7 @@ public class UserService {
         if (user.getRole() == Role.ADMIN && users.countByRole(Role.ADMIN) <= 1) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Phải còn ít nhất một tài khoản quản trị");
         }
+        refreshTokens.deleteAll(user);
         users.delete(user);
     }
 

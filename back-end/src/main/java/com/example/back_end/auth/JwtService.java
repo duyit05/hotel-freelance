@@ -2,9 +2,8 @@ package com.example.back_end.auth;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.back_end.config.AppProperties;
 import com.example.back_end.config.SecurityConfig;
+import com.example.back_end.user.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,27 +24,24 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final AppProperties props;
 
-    /** Tạo token chứa tên đăng nhập (sub), họ tên (name), role (roles) và thời hạn (exp) */
-    public LoginResponse issue(Authentication auth, String fullName) {
-        String name = fullName == null || fullName.isBlank() ? auth.getName() : fullName;
+    /** Tạo access token ngắn hạn chứa tên đăng nhập (sub), họ tên (name), role (roles) và thời hạn (exp) */
+    public LoginResponse issue(User user) {
+        String name = user.getFullName() == null || user.getFullName().isBlank() ? user.getUsername() : user.getFullName();
+        List<String> roles = List.of(user.getRole().name());
         Instant now = Instant.now();
         Instant expiresAt = now.plus(props.jwt().expiration());
-        List<String> roles = auth.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .filter(a -> a.startsWith("ROLE_"))
-            .map(a -> a.substring("ROLE_".length()))
-            .toList();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-            .issuer("duynhat-hotel")
+            .id(UUID.randomUUID().toString())
+            .issuer(SecurityConfig.JWT_ISSUER)
             .issuedAt(now)
             .expiresAt(expiresAt)
-            .subject(auth.getName())
+            .subject(user.getUsername())
             .claim(SecurityConfig.ROLES_CLAIM, roles)
             .claim(SecurityConfig.NAME_CLAIM, name)
             .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
-        return new LoginResponse(token, auth.getName(), name, roles, expiresAt);
+        return new LoginResponse(token, user.getUsername(), name, roles, expiresAt);
     }
 }

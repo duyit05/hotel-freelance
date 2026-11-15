@@ -119,6 +119,160 @@ class BackEndApplicationTests {
 		return "Bearer " + JsonPath.read(body, "$.token");
 	}
 
+	private static final String REFRESH_COOKIE = com.example.back_end.auth.AuthController.REFRESH_COOKIE;
+
+	private org.springframework.test.web.servlet.ResultActions refresh(String refreshToken) throws Exception {
+		return mvc.perform(post("/api/auth/refresh").header("X-Requested-With", "XMLHttpRequest")
+			.cookie(new jakarta.servlet.http.Cookie(REFRESH_COOKIE, refreshToken)));
+	}
+
+	@Test
+	void refreshTokenRotatesAndDetectsReuse() throws Exception {
+		var login = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
+			.andExpect(status().isOk())
+			.andReturn().getResponse();
+		var cookie = login.getCookie(REFRESH_COOKIE);
+		assertThat(cookie).isNotNull();
+		assertThat(cookie.isHttpOnly()).isTrue();
+		assertThat(cookie.getSecure()).isTrue();
+		assertThat(cookie.getPath()).isEqualTo("/api/auth");
+		assertThat(login.getHeader("Set-Cookie")).contains("SameSite=Strict");
+		String first = cookie.getValue();
+
+		// Thiếu header X-Requested-With -> từ chối (chống CSRF)
+		mvc.perform(post("/api/auth/refresh").cookie(new jakarta.servlet.http.Cookie(REFRESH_COOKIE, first)))
+			.andExpect(status().isForbidden());
+
+		// Làm mới: được access token mới + refresh token mới
+		var res = refresh(first).andExpect(status().isOk()).andReturn().getResponse();
+		String second = res.getCookie(REFRESH_COOKIE).getValue();
+		assertThat(second).isNotEqualTo(first);
+		mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + JsonPath.read(res.getContentAsString(), "$.token")))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.username").value("admin"));
+
+		// Token cũ gửi lại ngay (vd. tab khác): vẫn được access token nhưng không đổi cookie
+		var grace = refresh(first).andExpect(status().isOk()).andReturn().getResponse();
+		assertThat(grace.getCookie(REFRESH_COOKIE)).isNull();
+
+		// Đăng xuất -> thu hồi cả phiên, token nào của phiên đó cũng hết dùng được
+		mvc.perform(post("/api/auth/logout").header("X-Requested-With", "XMLHttpRequest")
+				.cookie(new jakarta.servlet.http.Cookie(REFRESH_COOKIE, second)))
+			.andExpect(status().isNoContent());
+		refresh(second).andExpect(status().isUnauthorized());
+		refresh(first).andExpect(status().isUnauthorized());
+		refresh("token-gia").andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void tooManyFailedLoginsAreBlocked() throws Exception {
+		for (int i = 0; i < 5; i++) {
+			mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+					.content("{\"username\":\"khoa-thu\",\"password\":\"sai\"}"))
+				.andExpect(status().isUnauthorized());
+		}
+		mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"khoa-thu\",\"password\":\"sai\"}"))
+			.andExpect(status().isTooManyRequests());
+	}
+
+	/** Tạo ảnh thật kích thước w x h (alpha = có nền trong suốt) */
+	private static byte[] image(String format, int w, int h, boolean alpha) throws Exception {
+		var img = new java.awt.image.BufferedImage(w, h,
+			alpha ? java.awt.image.BufferedImage.TYPE_INT_ARGB : java.awt.image.BufferedImage.TYPE_INT_RGB);
+		var g = img.createGraphics();
+		g.setColor(java.awt.Color.ORANGE);
+		g.fillRect(0, 0, w / 2, h / 2);
+		g.dispose();
+		var out = new java.io.ByteArrayOutputStream();
+		javax.imageio.ImageIO.write(img, format, out);
+		return out.toByteArray();
+	}
+
+	private String uploadPng(String auth) throws Exception {
+		byte[] png = image("png", 40, 30, false);
+		var file = new org.springframework.mock.web.MockMultipartFile("file", "a.png", "image/png", png);
+		String body = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/uploads")
+				.file(file).header("Authorization", auth))
+			.andExpect(status().isCreated())
+			.andReturn().getResponse().getContentAsString();
+		return JsonPath.read(body, "$.url");
+	}
+
+	@Test
+	void removedImagesAreDeletedFromStorage() throws Exception {
+		String auth = login("admin", "admin123");
+		String kept = uploadPng(auth);
+		String removed = uploadPng(auth);
+		String shared = uploadPng(auth);
+		Integer typeId = JsonPath.read(mvc.perform(get("/api/room-types")).andReturn().getResponse().getContentAsString(), "$[0].id");
+		String room = NEW_ROOM.replace("TYPE_ID", typeId.toString());
+
+		// Hai phòng cùng dùng ảnh "shared"
+		Integer a = JsonPath.read(mvc.perform(post("/api/rooms").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+				.content(room.replace("phong-test", "anh-a").replace("\"images\": []",
+					"\"images\": [\"" + kept + "\", \"" + removed + "\", \"" + shared + "\", \"/uploads/bath.jpg\"]")))
+			.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+		Integer b = JsonPath.read(mvc.perform(post("/api/rooms").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+				.content(room.replace("phong-test", "anh-b").replace("\"images\": []", "\"images\": [\"" + shared + "\"]")))
+			.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+
+		// Sửa phòng A, bỏ "removed": file bị xóa, ảnh khác còn nguyên
+		mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/rooms/" + a)
+				.header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+				.content(room.replace("phong-test", "anh-a").replace("\"images\": []",
+					"\"images\": [\"" + kept + "\", \"" + shared + "\", \"/uploads/bath.jpg\"]")))
+			.andExpect(status().isOk());
+		mvc.perform(get(removed)).andExpect(status().isNotFound());
+		mvc.perform(get(kept)).andExpect(status().isOk());
+		// Không xóa hẳn ngay mà nằm trong thùng rác
+		assertThat(TRASH.resolve(removed.substring("/uploads/".length()))).exists();
+
+		// Xóa phòng A: "kept" bị xóa; "shared" còn phòng B dùng nên giữ; ảnh mẫu không bao giờ bị xóa
+		mvc.perform(delete("/api/rooms/" + a).header("Authorization", auth)).andExpect(status().isNoContent());
+		mvc.perform(get(kept)).andExpect(status().isNotFound());
+		mvc.perform(get(shared)).andExpect(status().isOk());
+		mvc.perform(get("/uploads/bath.jpg")).andExpect(status().isOk());
+
+		mvc.perform(delete("/api/rooms/" + b).header("Authorization", auth)).andExpect(status().isNoContent());
+		mvc.perform(get(shared)).andExpect(status().isNotFound());
+	}
+
+	private static final java.nio.file.Path TRASH = java.nio.file.Path.of("target/test-uploads/.trash");
+
+	@Autowired
+	com.example.back_end.upload.StorageCleanupJob cleanupJob;
+
+	@Test
+	void nightlyCleanupTrashesOrphansThenPurges() throws Exception {
+		String auth = login("admin", "admin123");
+		String orphan = uploadPng(auth); // upload rồi không lưu vào phòng nào
+		String orphanName = orphan.substring("/uploads/".length());
+		String roomImage = JsonPath.read(mvc.perform(get("/api/rooms")).andReturn().getResponse().getContentAsString(), "$[0].images[0]");
+
+		// Mới upload: chưa đụng tới
+		invokeCleanup(java.time.Instant.now());
+		mvc.perform(get(orphan)).andExpect(status().isOk());
+
+		// Sau 2 ngày: ảnh thừa vào thùng rác, ảnh đang dùng và ảnh mẫu còn nguyên
+		invokeCleanup(java.time.Instant.now().plus(java.time.Duration.ofDays(2)));
+		mvc.perform(get(orphan)).andExpect(status().isNotFound());
+		assertThat(TRASH.resolve(orphanName)).exists();
+		mvc.perform(get(roomImage)).andExpect(status().isOk());
+		mvc.perform(get("/uploads/bath.jpg")).andExpect(status().isOk());
+
+		// Quá 7 ngày trong thùng rác: xóa hẳn
+		invokeCleanup(java.time.Instant.now().plus(java.time.Duration.ofDays(9)));
+		assertThat(TRASH.resolve(orphanName)).doesNotExist();
+	}
+
+	private void invokeCleanup(java.time.Instant now) throws Exception {
+		var m = cleanupJob.getClass().getDeclaredMethod("cleanup", java.time.Instant.class);
+		m.setAccessible(true);
+		m.invoke(cleanupJob, now);
+	}
+
 	@Test
 	void uploadedImageIsServed() throws Exception {
 		// Ảnh mẫu đã được chép vào nơi lưu ảnh khi khởi động
@@ -129,18 +283,54 @@ class BackEndApplicationTests {
 		mvc.perform(get("/uploads/khong-co.jpg")).andExpect(status().isNotFound());
 		mvc.perform(get("/uploads/..%2Fapplication.yml")).andExpect(status().is4xxClientError());
 
-		byte[] png = { (byte) 0x89, 'P', 'N', 'G', 1, 2, 3 };
+		byte[] png = image("png", 40, 30, true);
 		var file = new org.springframework.mock.web.MockMultipartFile("file", "a.png", "image/png", png);
 		var multipart = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/uploads").file(file);
 		mvc.perform(multipart).andExpect(status().isUnauthorized());
 
-		String body = mvc.perform(multipart.header("Authorization", login("admin", "admin123")))
+		// PNG có nền trong suốt: giữ PNG, kích thước không đổi
+		String auth = login("admin", "admin123");
+		String body = mvc.perform(multipart.header("Authorization", auth))
 			.andExpect(status().isCreated())
 			.andReturn().getResponse().getContentAsString();
 		String url = JsonPath.read(body, "$.url");
 		assertThat(url).startsWith("/uploads/").endsWith(".png");
-		assertThat(mvc.perform(get(url)).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray())
-			.isEqualTo(png);
+		var served = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(
+			mvc.perform(get(url)).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray()));
+		assertThat(served.getWidth()).isEqualTo(40);
+		assertThat(served.getColorModel().hasAlpha()).isTrue();
+	}
+
+	@Test
+	void uploadsAreResizedAndValidated() throws Exception {
+		String auth = login("admin", "admin123");
+		var upload = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/uploads");
+
+		// Ảnh lớn -> thu nhỏ còn cạnh dài 1920px, lưu JPEG
+		byte[] big = image("jpg", 4000, 3000, false);
+		String body = mvc.perform(upload.file(new org.springframework.mock.web.MockMultipartFile("file", "big.jpg", "image/jpeg", big))
+				.header("Authorization", auth))
+			.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+		String url = JsonPath.read(body, "$.url");
+		assertThat(url).endsWith(".jpg");
+		var res = mvc.perform(get(url)).andExpect(status().isOk()).andReturn().getResponse();
+		var img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(res.getContentAsByteArray()));
+		assertThat(img.getWidth()).isEqualTo(1920);
+		assertThat(img.getHeight()).isEqualTo(1440);
+
+		// PNG không trong suốt -> đổi sang JPEG cho nhẹ
+		body = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/uploads")
+				.file(new org.springframework.mock.web.MockMultipartFile("file", "a.png", "image/png", image("png", 50, 50, false)))
+				.header("Authorization", auth))
+			.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+		assertThat((String) JsonPath.read(body, "$.url")).endsWith(".jpg");
+
+		// Đuôi .png nhưng nội dung không phải ảnh -> từ chối
+		mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/uploads")
+				.file(new org.springframework.mock.web.MockMultipartFile("file", "x.png", "image/png", "<script>".getBytes()))
+				.header("Authorization", auth))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.detail").value("File không phải ảnh hợp lệ"));
 	}
 
 	@Test
@@ -184,14 +374,21 @@ class BackEndApplicationTests {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.username").value("letan"))
 			.andExpect(jsonPath("$.fullName").value("Trần Lễ Tân"));
-		String other = login("letan", "matkhau2");
+		var letanLogin = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"letan\",\"password\":\"matkhau2\"}"))
+			.andReturn().getResponse();
+		String other = "Bearer " + JsonPath.read(letanLogin.getContentAsString(), "$.token");
+		String letanRefresh = letanLogin.getCookie(REFRESH_COOKIE).getValue();
+		refresh(letanRefresh).andExpect(status().isOk());
 
 		// Không tự xóa tài khoản đang đăng nhập
 		mvc.perform(delete("/api/users/" + id).header("Authorization", other))
 			.andExpect(status().isConflict())
 			.andExpect(jsonPath("$.detail").value("Không thể tự xóa tài khoản đang đăng nhập"));
 
+		// Xóa tài khoản kéo theo xóa mọi phiên đăng nhập của tài khoản đó
 		mvc.perform(delete("/api/users/" + id).header("Authorization", auth)).andExpect(status().isNoContent());
 		mvc.perform(get("/api/users/" + id).header("Authorization", auth)).andExpect(status().isNotFound());
+		refresh(letanRefresh).andExpect(status().isUnauthorized());
 	}
 }

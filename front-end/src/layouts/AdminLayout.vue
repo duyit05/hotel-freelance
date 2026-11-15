@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminIcon from '@/components/admin/AdminIcon.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
 import { useAuth } from '@/composables/useAuth'
 import { Toaster } from 'vue-sonner'
 import 'vue-sonner/style.css'
@@ -27,8 +28,18 @@ const pageTitle = computed(() => route.meta.title ?? 'Quản trị')
 // Đóng menu trên điện thoại khi chuyển trang
 watch(() => route.fullPath, () => (drawerOpen.value = false))
 
-function signOut() {
-  logout()
+// Hỏi lại trước khi đăng xuất
+const confirmLogout = ref(false)
+const signingOut = ref(false)
+
+async function signOut() {
+  signingOut.value = true
+  try {
+    await logout()
+  } finally {
+    signingOut.value = false
+    confirmLogout.value = false
+  }
   router.push({ name: 'admin-login' })
 }
 </script>
@@ -102,7 +113,7 @@ function signOut() {
           <p class="truncate text-[13px] font-semibold">{{ user?.fullName }}</p>
           <p class="truncate text-xs text-muted">@{{ user?.username }}</p>
         </div>
-        <button type="button" class="a-btn a-btn--icon" title="Đăng xuất" aria-label="Đăng xuất" @click="signOut">
+        <button type="button" class="a-btn a-btn--icon" title="Đăng xuất" aria-label="Đăng xuất" @click="confirmLogout = true">
           <AdminIcon name="logout" class="size-[18px]" />
         </button>
       </div>
@@ -133,5 +144,16 @@ function signOut() {
       :visible-toasts="4"
       :toast-options="{ style: { fontFamily: 'inherit' } }"
     />
+
+    <AdminConfirmDialog
+      v-model:open="confirmLogout"
+      title="Đăng xuất?"
+      icon="logout"
+      confirm-text="Đăng xuất"
+      :loading="signingOut"
+      @confirm="signOut"
+    >
+      Bạn sẽ cần đăng nhập lại để tiếp tục quản lý khách sạn.
+    </AdminConfirmDialog>
   </div>
 </template>

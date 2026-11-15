@@ -4,6 +4,7 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminField from '@/components/admin/AdminField.vue'
 import AdminAlert from '@/components/admin/AdminAlert.vue'
+import AdminPasswordInput from '@/components/admin/AdminPasswordInput.vue'
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD, CARD_TITLE, INPUT } from '@/components/admin/styles'
 import { initials } from '@/utils/format'
@@ -122,25 +123,21 @@ async function save() {
         <section :class="[CARD, 'p-5 sm:p-6']">
           <h2 :class="CARD_TITLE">{{ isEdit ? 'Đổi mật khẩu' : 'Mật khẩu' }}</h2>
           <p class="mt-0.5 mb-5 text-[13px] text-ink-2">
-            {{ isEdit ? 'Để trống nếu muốn giữ mật khẩu hiện tại.' : 'Ít nhất 6 ký tự, nên có cả chữ và số.' }}
+            {{ isEdit ? 'Để trống nếu muốn giữ mật khẩu hiện tại.' : 'Ít nhất 8 ký tự, nên có cả chữ và số.' }}
           </p>
           <div class="grid gap-4 sm:grid-cols-2">
             <AdminField id="password" :label="isEdit ? 'Mật khẩu mới' : 'Mật khẩu'" :required="!isEdit" :error="errors.password">
-              <input
+              <AdminPasswordInput
                 id="password"
                 v-model="form.password"
-                type="password"
-                :class="INPUT"
                 :aria-invalid="!!errors.password"
                 autocomplete="new-password"
               />
             </AdminField>
             <AdminField id="confirm" label="Nhập lại mật khẩu" :required="!isEdit" :error="errors.confirm">
-              <input
+              <AdminPasswordInput
                 id="confirm"
                 v-model="form.confirm"
-                type="password"
-                :class="INPUT"
                 :aria-invalid="!!errors.confirm"
                 autocomplete="new-password"
               />

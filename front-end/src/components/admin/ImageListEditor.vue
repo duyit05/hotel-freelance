@@ -66,6 +66,6 @@ function makeCover(i) {
     </div>
     <input ref="input" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" @change="onFiles" />
     <p v-if="error" class="mt-2 text-[13px] text-danger">{{ error }}</p>
-    <p v-else class="mt-2 text-[13px] text-muted">JPG, PNG hoặc WEBP, tối đa 5MB mỗi ảnh. Ảnh đầu tiên là ảnh bìa.</p>
+    <p v-else class="mt-2 text-[13px] text-muted">JPG, PNG hoặc WEBP, tối đa 10MB mỗi ảnh (tự động nén khi tải lên). Ảnh đầu tiên là ảnh bìa.</p>
   </div>
 </template>

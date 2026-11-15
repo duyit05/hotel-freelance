@@ -51,6 +51,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
 		</dependency>
+		<!-- Thu nhỏ/nén ảnh khi upload (tự xoay theo EXIF của ảnh điện thoại) -->
+		<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.20</version>
+		</dependency>
 		<!-- Lưu ảnh trên MinIO (tương thích S3) -->
 		<dependency>
 			<groupId>io.minio</groupId>

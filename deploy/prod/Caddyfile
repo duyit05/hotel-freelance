@@ -2,6 +2,16 @@
 {$DOMAIN} {
 	encode zstd gzip
 
+	# Header bảo mật cho mọi phản hồi
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
 	# API và ảnh upload -> back-end Spring Boot
 	handle /api/* {
 		reverse_proxy backend:8080

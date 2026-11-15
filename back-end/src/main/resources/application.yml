@@ -8,9 +8,13 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5433/hotel}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/hotel_management}
     username: ${DB_USERNAME:hotel}
     password: ${DB_PASSWORD:hotel}
+    # Website nhỏ: 5 kết nối là đủ (mặc định 10), mỗi kết nối tốn thêm RAM ở PostgreSQL
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
 
   jpa:
     hibernate:
@@ -22,11 +26,22 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 5MB
+      # Ảnh gốc từ điện thoại có thể 5–8 MB; back-end tự nén còn vài trăm KB trước khi lưu
+      max-file-size: 10MB
       max-request-size: 20MB
 
 server:
   port: 8080
+  # Chạy sau Caddy: lấy IP thật của người dùng từ X-Forwarded-For (chỉ tin proxy trong mạng nội bộ)
+  forward-headers-strategy: native
+  # Không trả stack trace ra ngoài
+  error:
+    include-stacktrace: never
+  # VPS 2 GB RAM: tối đa 50 luồng xử lý (mặc định 200), mỗi luồng giữ ~0.5–1 MB RAM
+  tomcat:
+    threads:
+      max: 50
+      min-spare: 5
 
 # Lưu ảnh upload
 app:
@@ -46,7 +61,15 @@ app:
   # Chuỗi ngẫu nhiên, ít nhất 32 ký tự
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-hay-doi-khi-chay-that-0123456789}
-    expiration: 8h
+    # Access token ngắn hạn; hết hạn thì front-end tự lấy token mới bằng refresh token
+    expiration: 15m
+    # Refresh token: không dùng 7 ngày thì hết hạn; mỗi lần làm mới được gia hạn,
+    # nhưng một lần đăng nhập tối đa 30 ngày
+    refresh-expiration: 7d
+    session-max-age: 30d
+    # Cookie refresh chỉ gửi qua HTTPS (trình duyệt vẫn chấp nhận trên http://localhost).
+    # Chỉ đặt false khi chạy thử qua HTTP bằng IP/tên miền khác localhost
+    cookie-secure: ${JWT_COOKIE_SECURE:true}
 
   # Tài khoản admin được tạo lần đầu chạy (nếu chưa có)
   admin:

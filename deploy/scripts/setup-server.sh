@@ -31,6 +31,25 @@ if ! swapon --show | grep -q /swapfile; then
   echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf
 fi
 
+echo "== Giới hạn log hệ thống (ổ 20 GB) =="
+mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nSystemMaxUse=200M\n' > /etc/systemd/journald.conf.d/size.conf
+systemctl restart systemd-journald
+# Log backup tự xoay vòng, giữ 4 tuần
+cat > /etc/logrotate.d/hotel-backup <<'EOF'
+/var/log/hotel-backup.log {
+  weekly
+  rotate 4
+  compress
+  missingok
+  notifempty
+}
+EOF
+
+echo "== Tự cài bản vá bảo mật =="
+apt-get install -y unattended-upgrades
+dpkg-reconfigure -f noninteractive unattended-upgrades
+
 echo "== Tường lửa =="
 apt-get install -y ufw
 ufw allow OpenSSH
@@ -42,7 +61,9 @@ ufw --force enable
 echo "== Thư mục ứng dụng và lịch backup =="
 mkdir -p /opt/hotel /root/hotel-backups
 CRON_LINE='0 2 * * * bash /opt/hotel/backup.sh >> /var/log/hotel-backup.log 2>&1'
-( crontab -l 2>/dev/null | grep -v 'hotel/backup.sh' ; echo "$CRON_LINE" ) | crontab -
+# Mỗi Chủ nhật 4h: xóa image cũ đã bị thay sau các lần deploy (không đụng image đang dùng và volume dữ liệu)
+CRON_PRUNE='0 4 * * 0 docker image prune -f >> /var/log/hotel-backup.log 2>&1'
+( crontab -l 2>/dev/null | grep -v 'hotel/backup.sh' | grep -v 'docker system prune' ; echo "$CRON_LINE" ; echo "$CRON_PRUNE" ) | crontab -
 
 echo
 echo "Xong. Bước tiếp theo:"

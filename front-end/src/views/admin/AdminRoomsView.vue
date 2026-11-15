@@ -381,10 +381,7 @@ onMounted(load)
                     <div class="flex items-center gap-3">
                       <img v-if="room.images[0]" :src="room.images[0]" alt="" class="h-8 w-11 shrink-0 rounded-[5px] bg-surface-2 object-cover" />
                       <span v-else class="h-8 w-11 shrink-0 rounded-[5px] bg-surface-2" />
-                      <span class="min-w-0 leading-tight">
-                        <span class="block truncate font-medium">{{ room.name }}</span>
-                        <span class="block truncate text-[12.5px] text-muted">/phong/{{ room.slug }}</span>
-                      </span>
+                      <span class="min-w-0 truncate font-medium">{{ room.name }}</span>
                     </div>
                   </td>
                   <td>
@@ -453,8 +450,6 @@ onMounted(load)
           <dd :class="missingImages(selected) && 'text-warn'">{{ selected.images.length }}</dd>
           <dt>Tiện nghi</dt>
           <dd>{{ selected.features.length }}</dd>
-          <dt>Đường dẫn</dt>
-          <dd>/phong/{{ selected.slug }}</dd>
         </dl>
 
         <div class="mt-6 border-t border-line pt-4">

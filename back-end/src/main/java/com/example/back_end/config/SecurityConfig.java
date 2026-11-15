@@ -21,11 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -35,12 +37,14 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 /**
  * Phân quyền:
  * - Ai cũng xem được danh sách/chi tiết phòng và ảnh.
- * - Đăng nhập tại POST /api/auth/login để lấy JWT.
+ * - Đăng nhập tại POST /api/auth/login để lấy JWT (access token ngắn hạn) + refresh token trong cookie HttpOnly.
+ * - POST /api/auth/refresh lấy access token mới, POST /api/auth/logout thu hồi phiên (xem AuthController).
  * - Mọi API còn lại (thêm/sửa/xóa phòng, upload ảnh) cần header "Authorization: Bearer <token>" với role ADMIN.
  */
 @Configuration
 public class SecurityConfig {
 
+    public static final String JWT_ISSUER = "duynhat-hotel";
     public static final String ROLES_CLAIM = "roles";
     public static final String NAME_CLAIM = "name";
 
@@ -53,15 +57,20 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // API stateless dùng JWT, không dùng cookie nên không cần CSRF
+            // API xác thực bằng header Authorization nên không cần CSRF token.
+            // Riêng cookie refresh: SameSite=Strict + bắt buộc header X-Requested-With (xem AuthController)
+            .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/rooms/**", "/api/room-types/**", "/uploads/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/**").hasRole("ADMIN")
                 .anyRequest().denyAll())
+            .headers(h -> h
+                .frameOptions(f -> f.deny())
+                .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
             .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();
     }
@@ -84,7 +93,10 @@ public class SecurityConfig {
 
     @Bean
     JwtDecoder jwtDecoder(SecretKey key) {
-        return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
+        // Kiểm tra hạn (exp/nbf) và người phát hành (iss)
+        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(JWT_ISSUER));
+        return decoder;
     }
 
     /** Đọc claim "roles": ["ADMIN"] trong token thành quyền ROLE_ADMIN */
@@ -118,7 +130,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(props.corsOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        // Cho phép gửi cookie refresh khi front-end chạy ở origin khác (chỉ các origin trong danh sách)
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

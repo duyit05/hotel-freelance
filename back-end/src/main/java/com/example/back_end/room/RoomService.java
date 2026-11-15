@@ -8,7 +8,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.example.back_end.upload.FileStorageService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +23,7 @@ public class RoomService {
 
     private final RoomRepository rooms;
     private final RoomTypeService types;
+    private final FileStorageService storage;
 
     @Transactional(readOnly = true)
     public List<RoomResponse> findAll() {
@@ -55,7 +60,9 @@ public class RoomService {
             ensureSlugFree(req.slug());
             room.setSlug(req.slug());
         }
+        List<String> oldImages = List.copyOf(room.getImages());
         req.applyTo(room, types.get(req.typeId()));
+        deleteUnusedImages(oldImages.stream().filter(url -> !room.getImages().contains(url)).toList());
         return RoomResponse.from(room);
     }
 
@@ -85,7 +92,31 @@ public class RoomService {
     }
 
     public void delete(Long id) {
-        rooms.delete(get(id));
+        Room room = get(id);
+        List<String> images = List.copyOf(room.getImages());
+        rooms.delete(room);
+        deleteUnusedImages(images);
+    }
+
+    /**
+     * Chuyển file của các ảnh vừa bị bỏ khỏi phòng vào thùng rác nếu không còn phòng nào dùng.
+     * Kiểm tra trong transaction, còn chuyển file thì đợi lưu DB thành công (lưu lỗi thì file vẫn còn).
+     */
+    private void deleteUnusedImages(List<String> removed) {
+        if (removed.isEmpty()) {
+            return;
+        }
+        rooms.flush();
+        List<String> unused = removed.stream().distinct().filter(url -> !rooms.isImageUsed(url)).toList();
+        if (unused.isEmpty()) {
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                unused.forEach(storage::trashByUrl);
+            }
+        });
     }
 
     private Room get(Long id) {
