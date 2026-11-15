@@ -63,7 +63,9 @@ mkdir -p /opt/hotel /root/hotel-backups
 CRON_LINE='0 2 * * * bash /opt/hotel/backup.sh >> /var/log/hotel-backup.log 2>&1'
 # Mỗi Chủ nhật 4h: xóa image cũ đã bị thay sau các lần deploy (không đụng image đang dùng và volume dữ liệu)
 CRON_PRUNE='0 4 * * 0 docker image prune -f >> /var/log/hotel-backup.log 2>&1'
-( crontab -l 2>/dev/null | grep -v 'hotel/backup.sh' | grep -v 'docker system prune' ; echo "$CRON_LINE" ; echo "$CRON_PRUNE" ) | crontab -
+# VPS mới chưa có crontab thì "crontab -l" báo lỗi -> "|| true" để script không dừng giữa chừng
+OTHER_JOBS=$(crontab -l 2>/dev/null | grep -v 'hotel/backup.sh' | grep -v 'docker image prune' || true)
+printf '%s\n%s\n%s\n' "$OTHER_JOBS" "$CRON_LINE" "$CRON_PRUNE" | sed '/^$/d' | crontab -
 
 echo
 echo "Xong. Bước tiếp theo:"
