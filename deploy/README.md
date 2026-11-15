@@ -11,6 +11,7 @@ deploy/
 └── scripts/
     ├── setup-server.sh     Chạy 1 lần trên VPS mới: Docker, swap, tường lửa, lịch backup
     ├── deploy.sh           Chạy trên máy dev: build image, đẩy lên VPS, khởi động lại
+    ├── update.sh           Hoặc chạy trên VPS: git pull, build ngay trên VPS, khởi động lại
     └── backup.sh           Chạy trên VPS (cron hằng ngày): backup database + ảnh
 ```
 
