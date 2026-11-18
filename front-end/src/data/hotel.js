@@ -6,10 +6,10 @@ export const PHONES = [
   { label: '0845 64 65 68', tel: '0845646568' },
 ]
 export const PHONE = PHONES[0]
-export const ZALO_URL = 'https://zalo.me/0845646568'
-/** Fanpage Facebook: thay bằng link thật của khách sạn */
-export const FACEBOOK_URL = 'https://www.facebook.com/duynhathotel'
-export const EMAIL = 'datphong@duynhathotel.vn'
+export const ZALO_URL = 'https://zalo.me/1528036047410573339'
+/** Fanpage Facebook của khách sạn */
+export const FACEBOOK_URL = 'https://www.facebook.com/DuyNhatHotelQuyNhon'
+export const EMAIL = 'duynhathotelquynhon@gmail.com'
 export const ADDRESS = {
   street: '85-87 Tây Sơn',
   area: 'phường Quy Nhơn Nam, tỉnh Gia Lai',

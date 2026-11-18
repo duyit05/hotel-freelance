@@ -1,14 +1,24 @@
 <script setup>
-// Nút Zalo + Facebook nổi ở góc phải dưới, hiện trên mọi trang khách.
+// Nút Gọi điện + Zalo + Facebook nổi ở góc phải dưới, hiện trên mọi trang khách.
 // Trang chi tiết phòng trên điện thoại có thanh "Đặt phòng" ở đáy -> đẩy nút lên cao hơn.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { FACEBOOK_URL, ZALO_URL } from '@/data/hotel'
+import { FACEBOOK_URL, PHONES, ZALO_URL } from '@/data/hotel'
 
 const route = useRoute()
 const raised = computed(() => route.name === 'room')
 
+// Số di động (cùng số với nút "Gọi" ở mục Liên hệ)
+const CALL_PHONE = PHONES[1]
+
 const ITEMS = [
+  {
+    key: 'phone',
+    href: `tel:${CALL_PHONE.tel}`,
+    label: `Gọi ${CALL_PHONE.label}`,
+    aria: `Gọi điện cho khách sạn: ${CALL_PHONE.label}`,
+    color: '#0068FF',
+  },
   { key: 'zalo', href: ZALO_URL, label: 'Chat Zalo', aria: 'Nhắn Zalo cho khách sạn', color: '#0068FF' },
   { key: 'facebook', href: FACEBOOK_URL, label: 'Facebook', aria: 'Trang Facebook của khách sạn', color: '#0866FF' },
 ]
@@ -20,18 +30,26 @@ const ITEMS = [
       v-for="item in ITEMS"
       :key="item.key"
       :href="item.href"
-      target="_blank"
-      rel="noopener"
+      :target="item.key === 'phone' ? undefined : '_blank'"
+      :rel="item.key === 'phone' ? undefined : 'noopener'"
       :class="['fc-item', `fc-item--${item.key}`]"
       :style="{ '--brand-c': item.color }"
       :aria-label="item.aria"
     >
       <span class="fc-label" aria-hidden="true">{{ item.label }}</span>
       <span class="fc-btn">
-        <span v-if="item.key === 'zalo'" class="fc-ring" aria-hidden="true" />
+        <span class="fc-ring" aria-hidden="true" />
+
+        <!-- Icon điện thoại: ống nghe trắng, rung nhẹ -->
+        <svg v-if="item.key === 'phone'" viewBox="0 0 24 24" class="fc-icon fc-icon--phone" aria-hidden="true">
+          <path
+            fill="#fff"
+            d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1z"
+          />
+        </svg>
 
         <!-- Logo Zalo: bong bóng chat trắng, chữ Zalo xanh -->
-        <svg v-if="item.key === 'zalo'" viewBox="0 0 48 48" class="fc-icon" aria-hidden="true">
+        <svg v-else-if="item.key === 'zalo'" viewBox="0 0 48 48" class="fc-icon" aria-hidden="true">
           <path
             fill="#fff"
             d="M19 11h10c6.1 0 11 4.6 11 10.3S35.1 31.6 29 31.6h-6.6l-6.9 4.9c-.7.5-1.6-.1-1.4-.9l1.1-4.6C11.4 29.4 8 25.7 8 21.3 8 15.6 12.9 11 19 11Z"
@@ -112,7 +130,23 @@ const ITEMS = [
 .fc-icon { width: 46px; height: 46px; }
 .fc-icon--fb { width: 30px; height: 30px; }
 
-/* Vòng sóng lan ra quanh nút Zalo để gây chú ý */
+/* Ống nghe rung nhẹ theo nhịp để gây chú ý */
+.fc-icon--phone {
+  width: 26px;
+  height: 26px;
+  animation: fc-shake 2.2s ease-in-out infinite;
+}
+@keyframes fc-shake {
+  0%, 60%, 100% { transform: rotate(0); }
+  65%, 75%, 85% { transform: rotate(-14deg); }
+  70%, 80%, 90% { transform: rotate(14deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-icon--phone,
+  .fc-ring { animation: none; }
+}
+
+/* Vòng sóng lan ra quanh mọi nút để gây chú ý */
 .fc-ring {
   position: absolute;
   inset: -3px;
